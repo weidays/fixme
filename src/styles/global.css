@@ -503,6 +503,23 @@ article.fix h2 {
   opacity: 0.8;
 }
 
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 2rem 0 1rem;
+  font-size: 0.92rem;
+}
+
+.pagination .page-count {
+  color: var(--text-soft);
+}
+
+.pagination .disabled {
+  color: var(--border);
+}
+
 h2.section-title {
   font-size: 1.15rem;
   color: var(--text-soft);

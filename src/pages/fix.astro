@@ -1,16 +1,8 @@
 ---
-import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
-import { BRAND_LABELS, EQUIPMENT_LABELS } from '../config';
-
-const errors = await getCollection('errors');
-const index = errors.map((e) => ({
-  slug: e.id,
-  title: e.data.title,
-  error: `${BRAND_LABELS[e.data.brand]} ${EQUIPMENT_LABELS[e.data.equipment]} — ${e.data.code}`,
-  search:
-    `${BRAND_LABELS[e.data.brand]} ${EQUIPMENT_LABELS[e.data.equipment]} ${e.data.code} ${e.data.title} ${e.data.tags.join(' ')}`.toLowerCase(),
-}));
+// The search index is fetched at runtime from /search-index.json (built by
+// src/pages/search-index.json.ts), so this page's HTML stays small regardless
+// of how many thousand articles exist — no inlined index.
 ---
 
 <BaseLayout
@@ -55,7 +47,7 @@ const index = errors.map((e) => ({
   </div>
 </BaseLayout>
 
-<script define:vars={{ index }}>
+<script>
   const input = document.getElementById('error-input');
   const matches = document.getElementById('matches');
   const noMatch = document.getElementById('no-match');
@@ -69,6 +61,21 @@ const index = errors.map((e) => ({
   const MIN_LEN = 8;
   const reportedTexts = new Set();
   let reportTimer = null;
+
+  // Search index is fetched once, not inlined — keeps this page small at scale.
+  let index = [];
+  fetch('/search-index.json')
+    .then((r) => r.json())
+    .then((data) => {
+      index = data;
+      // Prefill from ?q (homepage search redirects here) and run the match.
+      const q = new URLSearchParams(location.search).get('q');
+      if (q && input) {
+        input.value = q;
+        input.dispatchEvent(new Event('input'));
+      }
+    })
+    .catch(() => {});
 
   const tokenize = (s) =>
     s

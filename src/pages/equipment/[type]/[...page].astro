@@ -1,0 +1,46 @@
+---
+import type { GetStaticPaths, Page } from 'astro';
+import type { CollectionEntry } from 'astro:content';
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import ErrorCard from '../../../components/ErrorCard.astro';
+import Pagination from '../../../components/Pagination.astro';
+import { EQUIPMENT, EQUIPMENT_LABELS } from '../../../config';
+
+export const getStaticPaths = (async ({ paginate }) => {
+  const all = await getCollection('errors');
+  return EQUIPMENT.filter((type) => all.some((e) => e.data.equipment === type)).flatMap((type) => {
+    const errors = all
+      .filter((e) => e.data.equipment === type)
+      .sort((a, b) => b.data.dateModified.valueOf() - a.data.dateModified.valueOf());
+    return paginate(errors, { params: { type }, pageSize: 24 });
+  });
+}) satisfies GetStaticPaths;
+
+interface Props {
+  page: Page<CollectionEntry<'errors'>>;
+}
+
+const { page } = Astro.props;
+const { type } = Astro.params;
+const label = EQUIPMENT_LABELS[type as (typeof EQUIPMENT)[number]];
+const pageSuffix = page.currentPage > 1 ? ` (page ${page.currentPage})` : '';
+---
+
+<BaseLayout
+  title={`${label} Error Codes & Fault Lights, Explained`}
+  description={`${label} error codes and blinking-light faults decoded by brand — meanings, ranked causes, honest repair costs, and when you need a licensed pro.`}
+>
+  <h1>{label} error codes{pageSuffix}</h1>
+  <p>
+    {page.total} documented {page.total === 1 ? 'code' : 'codes'} across brands,
+    with ranked causes and repair costs.
+  </p>
+  {page.data.map((entry) => <ErrorCard entry={entry} />)}
+  <Pagination
+    prevUrl={page.url.prev}
+    nextUrl={page.url.next}
+    currentPage={page.currentPage}
+    lastPage={page.lastPage}
+  />
+</BaseLayout>

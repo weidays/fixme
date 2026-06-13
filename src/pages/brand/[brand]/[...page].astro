@@ -1,0 +1,46 @@
+---
+import type { GetStaticPaths, Page } from 'astro';
+import type { CollectionEntry } from 'astro:content';
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import ErrorCard from '../../../components/ErrorCard.astro';
+import Pagination from '../../../components/Pagination.astro';
+import { BRANDS, BRAND_LABELS } from '../../../config';
+
+export const getStaticPaths = (async ({ paginate }) => {
+  const all = await getCollection('errors');
+  return BRANDS.filter((brand) => all.some((e) => e.data.brand === brand)).flatMap((brand) => {
+    const errors = all
+      .filter((e) => e.data.brand === brand)
+      .sort((a, b) => b.data.dateModified.valueOf() - a.data.dateModified.valueOf());
+    return paginate(errors, { params: { brand }, pageSize: 24 });
+  });
+}) satisfies GetStaticPaths;
+
+interface Props {
+  page: Page<CollectionEntry<'errors'>>;
+}
+
+const { page } = Astro.props;
+const { brand } = Astro.params;
+const label = BRAND_LABELS[brand as (typeof BRANDS)[number]];
+const pageSuffix = page.currentPage > 1 ? ` (page ${page.currentPage})` : '';
+---
+
+<BaseLayout
+  title={`${label} Error Codes: Meanings, Causes & Fixes`}
+  description={`Every ${label} HVAC error code we've decoded — what each code means, ranked causes, safe DIY checks, honest repair costs, and when to call a pro.`}
+>
+  <h1>{label} error codes{pageSuffix}</h1>
+  <p>
+    {page.total} documented {page.total === 1 ? 'code' : 'codes'} with ranked
+    causes, repair costs, and step-by-step guidance.
+  </p>
+  {page.data.map((entry) => <ErrorCard entry={entry} />)}
+  <Pagination
+    prevUrl={page.url.prev}
+    nextUrl={page.url.next}
+    currentPage={page.currentPage}
+    lastPage={page.lastPage}
+  />
+</BaseLayout>

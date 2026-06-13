@@ -127,11 +127,43 @@ if (!apiKey) {
 
 const today = new Date().toISOString().slice(0, 10);
 
+/**
+ * Titles + codes already covered for a given brand. Fed into the prompt so the
+ * model (a) doesn't write a near-duplicate of an existing page, and (b) links
+ * to the genuinely-related existing pages in its "Related codes" section.
+ * Scoped to the same brand to keep the prompt small as the library grows.
+ */
+function coveredForBrand(brand: string): string[] {
+  const out: string[] = [];
+  for (const f of readdirSync(ERRORS_DIR).filter((n) => n.endsWith('.md'))) {
+    try {
+      const md = readFileSync(join(ERRORS_DIR, f), 'utf-8');
+      const m = md.match(/^---\n([\s\S]*?)\n---/);
+      if (!m) continue;
+      const fm = yaml.load(m[1]) as Record<string, unknown> | null;
+      if (fm && fm.brand === brand && typeof fm.title === 'string') {
+        out.push(`${fm.code ?? ''} — ${fm.title}`.trim());
+      }
+    } catch {
+      /* ignore unparseable existing file */
+    }
+  }
+  return out;
+}
+
 function buildPrompt(item: { brand: string; equipment: string; code: string; severity: string }): string {
+  const covered = coveredForBrand(item.brand);
+  const dedupBlock = covered.length
+    ? `\nALREADY PUBLISHED for ${item.brand} (do NOT duplicate these; if your topic substantially overlaps one, cover only what's genuinely distinct, and reference the related ones by name in "Related codes"):\n${covered.map((c) => `- ${c}`).join('\n')}\n`
+    : '';
+  return buildPromptBody(item, dedupBlock);
+}
+
+function buildPromptBody(item: { brand: string; equipment: string; code: string; severity: string }, dedupBlock: string): string {
   return `You write expert HVAC error-code pages for fixme.vip, aimed at US homeowners. Produce ONE markdown file body (frontmatter + content) and nothing else — no preamble, no code fence around the whole file.
 
 Brand: ${item.brand} · Equipment: ${item.equipment} · Code/Problem: ${item.code} · Severity: ${item.severity} · Date: ${today}
-
+${dedupBlock}
 Frontmatter schema (YAML, zod-enforced — violations break the build):
 title: max 60 chars, keyword-first, e.g. "Carrier Furnace Code 13: Meaning, Causes & Fixes"
 code: "${item.code}"
