@@ -18,6 +18,44 @@
 import { readFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import yaml from 'js-yaml';
+
+const BRANDS = ['carrier', 'goodman', 'trane', 'lennox', 'york', 'rheem', 'bryant', 'amana', 'honeywell', 'american-standard'];
+const EQUIPMENT = ['furnace', 'air-conditioner', 'heat-pump', 'mini-split', 'thermostat'];
+const SEVERITIES = ['diy', 'pro', 'emergency'];
+
+/**
+ * Validate a generated draft against the content schema BEFORE writing it, so
+ * one malformed AI response can't fail the whole batch's build step. Returns an
+ * error reason, or null if the draft is valid. Mirrors src/content.config.ts.
+ */
+function validateDraft(md: string): string | null {
+  const m = md.match(/^---\n([\s\S]*?)\n---/);
+  if (!m) return 'no frontmatter block';
+  let fm: unknown;
+  try {
+    fm = yaml.load(m[1]);
+  } catch (e) {
+    return 'YAML parse error: ' + String((e as Error).message).split('\n')[0];
+  }
+  if (!fm || typeof fm !== 'object') return 'frontmatter is not an object';
+  const f = fm as Record<string, unknown>;
+  if (typeof f.title !== 'string' || f.title.length > 60) return 'title missing or >60 chars';
+  if (typeof f.description !== 'string' || f.description.length < 50 || f.description.length > 160) return 'description not 50-160 chars';
+  if (typeof f.code !== 'string' || f.code.length < 2) return 'code missing';
+  if (!BRANDS.includes(f.brand as string)) return `brand invalid: ${String(f.brand)}`;
+  if (!EQUIPMENT.includes(f.equipment as string)) return `equipment invalid: ${String(f.equipment)}`;
+  if (!SEVERITIES.includes(f.severity as string)) return `severity invalid: ${String(f.severity)}`;
+  if (typeof f.costRange !== 'string' || f.costRange.length < 3) return 'costRange missing';
+  if (typeof f.appliesTo !== 'string' || f.appliesTo.length < 10) return 'appliesTo too short';
+  if (!Array.isArray(f.tags) || f.tags.length < 1) return 'tags missing';
+  if (!Array.isArray(f.faq) || f.faq.length < 3) return 'faq needs >=3 items';
+  for (const item of f.faq) {
+    const q = item as { q?: unknown; a?: unknown };
+    if (typeof q?.q !== 'string' || typeof q?.a !== 'string' || q.a.length < 40) return 'faq item invalid (answer >=40 chars)';
+  }
+  return null;
+}
 
 interface BacklogItem {
   brand?: string;
@@ -119,21 +157,17 @@ Body structure, exactly these sections:
 ## Repair costs                           (honest US ranges per component)
 ## Related codes
 
-ACCURACY RULES: Only state what is well-documented for this brand. Where behavior varies by model/board, SAY SO explicitly rather than guessing. Never instruct bypassing safety switches, opening gas valves, handling refrigerant, or repeated resets of locked-out units. If severity is emergency (e.g. gas smell), the FIRST guidance must be to shut down, ventilate, and call the gas utility's emergency line / 911 — not DIY. Quote YAML strings containing colons.`;
+CRITICAL YAML SYNTAX (or the build rejects the page): wrap the values of title, code, description, costRange and appliesTo in double quotes — they contain colons, dashes, commas or "$" that break unquoted YAML. Do not use unescaped double quotes inside a quoted value. The frontmatter must be valid YAML.
+
+ACCURACY RULES: Only state what is well-documented for this brand. Where behavior varies by model/board, SAY SO explicitly rather than guessing. Never instruct bypassing safety switches, opening gas valves, handling refrigerant, or repeated resets of locked-out units. If severity is emergency (e.g. gas smell), the FIRST guidance must be to shut down, ventilate, and call the gas utility's emergency line / 911 — not DIY.`;
 }
 
-let written = 0;
-for (const item of pending) {
-  const outPath = join(ERRORS_DIR, `${item.slug}.md`);
-  if (existsSync(outPath)) {
-    console.log(`skip (exists): ${item.slug}`);
-    continue;
-  }
+async function generateOne(item: { brand: string; equipment: string; code: string; severity: string }): Promise<string | null> {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
-      'x-api-key': apiKey,
+      'x-api-key': apiKey!,
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify({
@@ -143,23 +177,54 @@ for (const item of pending) {
     }),
   });
   if (!res.ok) {
-    console.error(`FAILED ${item.slug}: ${res.status} ${await res.text()}`);
-    continue;
+    console.error(`  API error ${res.status}: ${(await res.text()).slice(0, 200)}`);
+    return null;
   }
   const data = (await res.json()) as { content: { type: string; text?: string }[] };
-  const md = data.content
-    .filter((b) => b.type === 'text')
-    .map((b) => b.text)
-    .join('')
-    .trim();
-  if (!md) {
-    console.error(`FAILED ${item.slug}: empty response`);
+  const md = data.content.filter((b) => b.type === 'text').map((b) => b.text).join('').trim();
+  return md || null;
+}
+
+let written = 0;
+const skipped: string[] = [];
+for (const item of pending) {
+  const outPath = join(ERRORS_DIR, `${item.slug}.md`);
+  if (existsSync(outPath)) {
+    console.log(`skip (exists): ${item.slug}`);
     continue;
   }
-  writeFileSync(outPath, md + '\n');
+
+  // Generate, validate, and retry once on a malformed draft. A bad page is
+  // dropped rather than written — so one bad response can't fail the batch's
+  // build step. The good pages still reach the review PR.
+  let good: string | null = null;
+  let lastReason = 'no response';
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    const md = await generateOne(item);
+    if (!md) {
+      lastReason = 'empty/error response';
+      continue;
+    }
+    const reason = validateDraft(md);
+    if (!reason) {
+      good = md;
+      break;
+    }
+    lastReason = reason;
+    console.error(`  ${item.slug}: attempt ${attempt} invalid (${reason})${attempt < 2 ? ' — retrying' : ''}`);
+  }
+
+  if (!good) {
+    skipped.push(`${item.slug} (${lastReason})`);
+    console.error(`SKIP ${item.slug}: ${lastReason}`);
+    continue;
+  }
+
+  writeFileSync(outPath, good + '\n');
   written++;
   console.log(`generated: ${item.slug}`);
 }
 
-console.log(`\nDone. ${written} draft(s) written to src/content/errors/.`);
-console.log('Next: the build step validates them against the schema; the PR is the review gate.');
+console.log(`\nDone. ${written} draft(s) written, ${skipped.length} skipped.`);
+if (skipped.length) console.log('Skipped: ' + skipped.join('; '));
+console.log('Next: the build step re-validates against the schema; the PR is the review gate.');
