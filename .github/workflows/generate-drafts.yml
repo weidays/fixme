@@ -1,0 +1,62 @@
+name: Generate content drafts
+
+# Daily content flywheel. Generates draft HVAC pages from content-backlog.json,
+# validates them against the schema, and opens a PR. The PR is the review gate —
+# nothing publishes until you skim it and merge.
+
+on:
+  schedule:
+    - cron: '0 14 * * *' # 14:00 UTC daily — adjust to taste
+  workflow_dispatch:
+    inputs:
+      count:
+        description: 'How many drafts to generate'
+        default: '10'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - run: npm install
+
+      - name: Generate drafts
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          COUNT: ${{ github.event.inputs.count || '10' }}
+          CLAUDE_MODEL: ${{ vars.CLAUDE_MODEL || 'claude-opus-4-8' }}
+        run: npx tsx scripts/generate-batch.ts
+
+      # If a generated page violates the content schema, the build fails here
+      # and NO PR is opened — bad content is gated out automatically.
+      - name: Validate content (schema build)
+        run: npm run build
+
+      - name: Open review PR
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: content/auto-${{ github.run_id }}
+          title: 'Content drafts — review & merge to publish'
+          commit-message: 'Auto-generated HVAC content drafts'
+          add-paths: src/content/errors/*.md
+          body: |
+            Auto-generated draft batch from `content-backlog.json`.
+
+            **This PR is the review gate.** Skim each added file under
+            `src/content/errors/` before merging.
+
+            - ✅ Verify the code's meaning against the manufacturer manual
+            - ✅ Check safety boundaries (no unsafe gas / refrigerant / reset steps)
+            - ✅ Sanity-check the cost ranges
+            - ❌ Close this PR to discard the whole batch
+
+            Merging publishes these pages and triggers a deploy to Cloudflare Pages.
