@@ -1,0 +1,91 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ErrorCard from '../components/ErrorCard.astro';
+import { BRANDS, BRAND_LABELS, EQUIPMENT, EQUIPMENT_LABELS } from '../config';
+
+const errors = (await getCollection('errors')).sort(
+  (a, b) => b.data.dateModified.valueOf() - a.data.dateModified.valueOf()
+);
+
+const countByBrand = Object.fromEntries(
+  BRANDS.map((b) => [b, errors.filter((e) => e.data.brand === b).length])
+);
+const countByEquipment = Object.fromEntries(
+  EQUIPMENT.map((t) => [t, errors.filter((e) => e.data.equipment === t).length])
+);
+---
+
+<BaseLayout
+  title="HVAC Error Codes Explained & Fixed — fixme.vip"
+  description="Look up your furnace, AC or heat pump error code. What it means, ranked causes, DIY checks, honest repair costs, and when to call a licensed pro."
+>
+  <section class="hero">
+    <h1>Your furnace is flashing a code.<br />Here's what it means.</h1>
+    <p>
+      Brand-specific HVAC error codes decoded: ranked causes, safe DIY checks,
+      honest repair costs, and when to call a licensed technician.
+    </p>
+    <div class="search-box">
+      <input
+        id="search"
+        type="search"
+        placeholder="Try “Carrier code 33” or “Goodman 3 flashes”…"
+        autocomplete="off"
+      />
+    </div>
+  </section>
+
+  <h2 class="section-title">By brand</h2>
+  <div class="category-grid">
+    {
+      BRANDS.filter((b) => countByBrand[b] > 0).map((b) => (
+        <a href={`/brand/${b}`}>
+          {BRAND_LABELS[b]}
+          <span>{countByBrand[b]} {countByBrand[b] === 1 ? 'code' : 'codes'}</span>
+        </a>
+      ))
+    }
+  </div>
+
+  <h2 class="section-title">By equipment</h2>
+  <div class="category-grid">
+    {
+      EQUIPMENT.filter((t) => countByEquipment[t] > 0).map((t) => (
+        <a href={`/equipment/${t}`}>
+          {EQUIPMENT_LABELS[t]}
+          <span>{countByEquipment[t]} {countByEquipment[t] === 1 ? 'code' : 'codes'}</span>
+        </a>
+      ))
+    }
+  </div>
+
+  <h2 class="section-title" id="all-codes">All codes</h2>
+  <div id="error-list">
+    {errors.map((entry) => <ErrorCard entry={entry} />)}
+    <p id="no-results" class="hidden">
+      We haven't covered that code yet. <a href="/fix">Report it</a> — reader
+      reports decide what we write next.
+    </p>
+  </div>
+</BaseLayout>
+
+<script>
+  const input = document.getElementById('search') as HTMLInputElement;
+  const cards = Array.from(
+    document.querySelectorAll<HTMLElement>('#error-list .error-card')
+  );
+  const noResults = document.getElementById('no-results')!;
+
+  input.addEventListener('input', () => {
+    const terms = input.value.toLowerCase().split(/\s+/).filter(Boolean);
+    let visible = 0;
+    for (const card of cards) {
+      const haystack = card.dataset.search ?? '';
+      const show = terms.every((t) => haystack.includes(t));
+      card.classList.toggle('hidden', !show);
+      if (show) visible++;
+    }
+    noResults.classList.toggle('hidden', visible > 0);
+  });
+</script>

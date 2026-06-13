@@ -1,0 +1,26 @@
+---
+// Rail B — repair-lead capture. Routes to /quote with source attribution.
+// When QUOTE_PHONE is set (pay-per-call provisioned), a call button renders too.
+import { QUOTE_PHONE } from '../config';
+
+interface Props {
+  source: string; // page slug for lead attribution
+  heading?: string;
+  urgent?: boolean;
+}
+
+const { source, heading = 'Get this fixed by a local pro', urgent = false } = Astro.props;
+const quoteHref = `/quote?from=${encodeURIComponent(source)}`;
+---
+
+<div class={`quote-cta ${urgent ? 'urgent' : ''}`}>
+  <p class="quote-heading">{heading}</p>
+  <p class="quote-sub">
+    Free, no-obligation quotes from licensed HVAC technicians in your area.
+    Compare up to 3 estimates before anyone visits.
+  </p>
+  <p class="quote-actions">
+    <a class="btn" href={quoteHref}>Get free local quotes</a>
+    {QUOTE_PHONE && <a class="btn btn-outline" href={`tel:${QUOTE_PHONE}`}>Call {QUOTE_PHONE}</a>}
+  </p>
+</div>

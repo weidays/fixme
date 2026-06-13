@@ -1,0 +1,42 @@
+[
+  { "_comment": "Human-curated backlog of real, searched HVAC problems. The daily generator works through these top-to-bottom, skipping any already published. Each entry is a genuine homeowner search; VERIFY exact code semantics against the manufacturer manual during PR review. To prioritize real demand, add high-frequency entries pulled from GET /api/queue near the top." },
+
+  { "brand": "carrier", "equipment": "furnace", "code": "Code 13", "severity": "pro" },
+  { "brand": "carrier", "equipment": "furnace", "code": "Code 34", "severity": "pro" },
+  { "brand": "bryant", "equipment": "furnace", "code": "Code 33", "severity": "pro" },
+  { "brand": "bryant", "equipment": "furnace", "code": "Code 13", "severity": "pro" },
+
+  { "brand": "carrier", "equipment": "air-conditioner", "code": "Not cooling", "severity": "pro" },
+  { "brand": "trane", "equipment": "air-conditioner", "code": "Not cooling", "severity": "pro" },
+  { "brand": "lennox", "equipment": "air-conditioner", "code": "Not cooling", "severity": "pro" },
+  { "brand": "rheem", "equipment": "air-conditioner", "code": "Not cooling", "severity": "pro" },
+  { "brand": "york", "equipment": "air-conditioner", "code": "Not cooling", "severity": "pro" },
+  { "brand": "american-standard", "equipment": "air-conditioner", "code": "Not cooling", "severity": "pro" },
+
+  { "brand": "carrier", "equipment": "air-conditioner", "code": "Frozen evaporator coil", "severity": "pro" },
+  { "brand": "goodman", "equipment": "air-conditioner", "code": "Frozen evaporator coil", "severity": "pro" },
+  { "brand": "trane", "equipment": "air-conditioner", "code": "Outdoor fan not spinning", "severity": "pro" },
+  { "brand": "carrier", "equipment": "air-conditioner", "code": "Outdoor fan not spinning", "severity": "pro" },
+
+  { "brand": "goodman", "equipment": "furnace", "code": "Short cycling", "severity": "pro" },
+  { "brand": "carrier", "equipment": "furnace", "code": "Short cycling", "severity": "pro" },
+  { "brand": "trane", "equipment": "furnace", "code": "Blowing cold air", "severity": "pro" },
+  { "brand": "lennox", "equipment": "furnace", "code": "Blowing cold air", "severity": "pro" },
+  { "brand": "goodman", "equipment": "furnace", "code": "Won't turn on", "severity": "pro" },
+  { "brand": "carrier", "equipment": "furnace", "code": "Keeps shutting off", "severity": "pro" },
+  { "brand": "rheem", "equipment": "furnace", "code": "Won't ignite", "severity": "pro" },
+  { "brand": "york", "equipment": "furnace", "code": "Won't ignite", "severity": "pro" },
+  { "brand": "amana", "equipment": "furnace", "code": "Ignition lockout", "severity": "pro" },
+
+  { "brand": "rheem", "equipment": "heat-pump", "code": "Frozen and not defrosting", "severity": "pro" },
+  { "brand": "goodman", "equipment": "heat-pump", "code": "Not heating", "severity": "pro" },
+  { "brand": "trane", "equipment": "heat-pump", "code": "Not heating", "severity": "pro" },
+  { "brand": "carrier", "equipment": "heat-pump", "code": "Auxiliary heat on constantly", "severity": "pro" },
+
+  { "brand": "honeywell", "equipment": "thermostat", "code": "Cool On flashing", "severity": "diy" },
+  { "brand": "honeywell", "equipment": "thermostat", "code": "Heat not working", "severity": "diy" },
+  { "brand": "honeywell", "equipment": "thermostat", "code": "Wi-Fi not connecting", "severity": "diy" },
+
+  { "brand": "goodman", "equipment": "mini-split", "code": "Blinking light error", "severity": "pro" },
+  { "brand": "carrier", "equipment": "furnace", "code": "Gas smell", "severity": "emergency" }
+]

@@ -1,0 +1,28 @@
+---
+// Gas / carbon-monoxide safety boundary. Rendered on every code page;
+// emergency severity gets the strong variant pinned at the top.
+interface Props {
+  emergency?: boolean;
+}
+
+const { emergency = false } = Astro.props;
+---
+
+{
+  emergency ? (
+    <div class="safety-banner emergency" role="alert">
+      <strong>⚠️ Stop — safety first.</strong> This fault can involve gas,
+      carbon monoxide, or fire risk. Turn the system off at the breaker, do not
+      attempt repeated resets, and have it inspected by a licensed technician.
+      If you smell gas or your CO detector is sounding, leave the building and
+      call your gas utility's emergency line first.
+    </div>
+  ) : (
+    <div class="safety-banner">
+      <strong>Safety first:</strong> anything beyond filters, batteries, and
+      visual checks on gas-burning equipment should be handled by a licensed
+      technician. Repeatedly resetting a locked-out unit can mask a dangerous
+      fault. When in doubt, get a pro.
+    </div>
+  )
+}

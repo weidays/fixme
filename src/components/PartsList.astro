@@ -1,0 +1,31 @@
+---
+// Rail A — parts the fix needs, rendered as Amazon affiliate search links.
+import { amazonSearchUrl } from '../config';
+
+interface Props {
+  parts: { name: string; search: string }[];
+}
+
+const { parts } = Astro.props;
+---
+
+{
+  parts.length > 0 && (
+    <div class="parts-list">
+      <p class="parts-heading">Parts &amp; tools for this fix</p>
+      <ul>
+        {parts.map((p) => (
+          <li>
+            <a href={amazonSearchUrl(p.search)} rel="nofollow sponsored noopener" target="_blank">
+              {p.name}
+            </a>
+          </li>
+        ))}
+      </ul>
+      <p class="parts-disclosure">
+        As an Amazon Associate, fixme.vip earns from qualifying purchases. Prices
+        and availability are on Amazon.
+      </p>
+    </div>
+  )
+}

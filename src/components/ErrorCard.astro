@@ -1,0 +1,21 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { BRAND_LABELS, EQUIPMENT_LABELS } from '../config';
+
+interface Props {
+  entry: CollectionEntry<'errors'>;
+}
+
+const { entry } = Astro.props;
+const d = entry.data;
+---
+
+<a
+  class="error-card"
+  href={`/error/${entry.id}`}
+  data-search={`${BRAND_LABELS[d.brand]} ${EQUIPMENT_LABELS[d.equipment]} ${d.code} ${d.title} ${d.tags.join(' ')}`.toLowerCase()}
+>
+  <span class="error-msg">{BRAND_LABELS[d.brand]} {EQUIPMENT_LABELS[d.equipment]} — {d.code}</span>
+  <span class="card-title">{d.title}</span>
+  <span class="card-desc">{d.description}</span>
+</a>

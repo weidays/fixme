@@ -1,0 +1,21 @@
+# Cloudflare Pages configuration — static site + functions/ deploy together.
+#
+# Before first deploy:
+#   1. npx wrangler kv namespace create FIXME_KV   → paste the id below
+#   2. In CF Pages dashboard (Settings → Environment variables), add:
+#        ANTHROPIC_API_KEY  (secret) — for /api/diagnose
+#        ADMIN_TOKEN        (secret) — for /api/queue and /api/leads
+#        RESEND_API_KEY     (secret) — for new-lead email alerts (resend.com)
+#        LEAD_NOTIFY_EMAIL  (plain)  — where lead alerts are sent
+#      Optional: CLAUDE_MODEL (defaults to claude-opus-4-8; haiku-4-5 cuts cost ~5x)
+#                LEAD_FROM_EMAIL (defaults to onboarding@resend.dev; set a verified
+#                                 fixme.vip sender once your domain is verified in Resend)
+#
+# Local dev: npm run build && npx wrangler pages dev dist
+name = "fixme-vip"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-06-01"
+
+[[kv_namespaces]]
+binding = "FIXME_KV"
+id = "25bdb633218648a28bf3f55043695004"

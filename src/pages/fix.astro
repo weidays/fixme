@@ -1,0 +1,264 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { BRAND_LABELS, EQUIPMENT_LABELS } from '../config';
+
+const errors = await getCollection('errors');
+const index = errors.map((e) => ({
+  slug: e.id,
+  title: e.data.title,
+  error: `${BRAND_LABELS[e.data.brand]} ${EQUIPMENT_LABELS[e.data.equipment]} — ${e.data.code}`,
+  search:
+    `${BRAND_LABELS[e.data.brand]} ${EQUIPMENT_LABELS[e.data.equipment]} ${e.data.code} ${e.data.title} ${e.data.tags.join(' ')}`.toLowerCase(),
+}));
+---
+
+<BaseLayout
+  title="Look Up Your HVAC Error Code — Instant Answers"
+  description="Type your furnace, AC or heat pump error code and brand. Get matched to a step-by-step fix guide instantly, or a free AI diagnosis of your exact fault."
+>
+  <h1>Look up your error code</h1>
+  <p>
+    Type the brand and code (e.g. <em>Carrier code 33</em>, <em>Goodman 3
+    flashes</em>) or describe what the unit is doing. We match it against every
+    documented fix — instantly, in your browser.
+  </p>
+
+  <textarea
+    id="error-input"
+    class="error-input"
+    rows="4"
+    placeholder="e.g. Carrier furnace blinking code 33, no heat…"></textarea>
+
+  <div id="matches"></div>
+
+  <p id="no-match" class="hidden applies-to">
+    We haven't written this one up yet — it's been recorded as a candidate for
+    our next guide. Meanwhile, use the button below for an AI read on your
+    exact fault, or <a href="/quote">get a free local pro quote</a>.
+  </p>
+
+  <div class="diagnose-row hidden" id="diagnose-row">
+    <button type="button" id="diagnose-btn" class="btn">Get AI diagnosis</button>
+  </div>
+
+  <div id="diagnose-notice" class="applies-to hidden"></div>
+
+  <div id="diagnosis-wrap" class="hidden" role="status" aria-live="polite">
+    <div id="diagnosis" class="diagnosis"></div>
+    <p id="diagnosis-meta" class="diagnosis-meta"></p>
+    <p class="applies-to">
+      <strong>Safety note:</strong> AI guidance can't see your unit. Anything
+      involving gas, burners, or safety switches needs a licensed technician —
+      <a href="/quote">get free local quotes</a>.
+    </p>
+  </div>
+</BaseLayout>
+
+<script define:vars={{ index }}>
+  const input = document.getElementById('error-input');
+  const matches = document.getElementById('matches');
+  const noMatch = document.getElementById('no-match');
+  const diagnoseRow = document.getElementById('diagnose-row');
+  const diagnoseBtn = document.getElementById('diagnose-btn');
+  const diagnoseNotice = document.getElementById('diagnose-notice');
+  const diagnosisWrap = document.getElementById('diagnosis-wrap');
+  const diagnosis = document.getElementById('diagnosis');
+  const diagnosisMeta = document.getElementById('diagnosis-meta');
+
+  const MIN_LEN = 8;
+  const reportedTexts = new Set();
+  let reportTimer = null;
+
+  const tokenize = (s) =>
+    s
+      .toLowerCase()
+      .replace(/['"`]/g, '')
+      .split(/[^a-z0-9_.]+/)
+      .filter((t) => t.length > 1);
+
+  // --- Tiny safe markdown renderer (escape-first, whitelist only) ----------
+  const escapeHtml = (s) =>
+    s
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+
+  const renderInline = (s) =>
+    escapeHtml(s).replace(/`([^`]+)`/g, '<code>$1</code>');
+
+  function renderMarkdown(md) {
+    const lines = String(md).split('\n');
+    let html = '';
+    let i = 0;
+    while (i < lines.length) {
+      const line = lines[i];
+
+      if (line.trimStart().startsWith('```')) {
+        i++;
+        const code = [];
+        while (i < lines.length && !lines[i].trimStart().startsWith('```')) {
+          code.push(lines[i]);
+          i++;
+        }
+        i++;
+        html += '<pre><code>' + escapeHtml(code.join('\n')) + '</code></pre>';
+        continue;
+      }
+
+      const heading = line.match(/^(#{1,6})\s+(.*)$/);
+      if (heading) {
+        html += '<h3>' + renderInline(heading[2]) + '</h3>';
+        i++;
+        continue;
+      }
+
+      if (/^\s*[-*]\s+/.test(line)) {
+        let items = '';
+        while (i < lines.length && /^\s*[-*]\s+/.test(lines[i])) {
+          items += '<li>' + renderInline(lines[i].replace(/^\s*[-*]\s+/, '')) + '</li>';
+          i++;
+        }
+        html += '<ul>' + items + '</ul>';
+        continue;
+      }
+
+      if (/^\s*\d+[.)]\s+/.test(line)) {
+        let items = '';
+        while (i < lines.length && /^\s*\d+[.)]\s+/.test(lines[i])) {
+          items += '<li>' + renderInline(lines[i].replace(/^\s*\d+[.)]\s+/, '')) + '</li>';
+          i++;
+        }
+        html += '<ol>' + items + '</ol>';
+        continue;
+      }
+
+      if (line.trim() === '') {
+        i++;
+        continue;
+      }
+
+      html += '<p>' + renderInline(line) + '</p>';
+      i++;
+    }
+    return html;
+  }
+
+  // --- Auto-report unmatched codes (topic-mining flywheel) -----------------
+  function scheduleReport(text) {
+    if (reportTimer) clearTimeout(reportTimer);
+    reportTimer = setTimeout(() => {
+      reportTimer = null;
+      if (reportedTexts.has(text)) return;
+      reportedTexts.add(text);
+      fetch('/api/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: text }),
+      }).catch(() => {});
+    }, 1500);
+  }
+
+  // --- Local matching -------------------------------------------------------
+  input.addEventListener('input', () => {
+    const raw = input.value;
+    const trimmed = raw.trim();
+    const tokens = tokenize(raw);
+
+    matches.innerHTML = '';
+    noMatch.classList.add('hidden');
+    if (reportTimer) {
+      clearTimeout(reportTimer);
+      reportTimer = null;
+    }
+
+    diagnoseRow.classList.toggle('hidden', trimmed.length < MIN_LEN);
+
+    if (tokens.length === 0) return;
+
+    const scored = index
+      .map((entry) => ({
+        entry,
+        score: tokens.filter((t) => entry.search.includes(t)).length / tokens.length,
+      }))
+      .filter((m) => m.score >= 0.3)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5);
+
+    if (scored.length === 0) {
+      noMatch.classList.remove('hidden');
+      if (trimmed.length >= MIN_LEN) scheduleReport(trimmed);
+      return;
+    }
+
+    for (const { entry } of scored) {
+      const a = document.createElement('a');
+      a.className = 'error-card';
+      a.href = `/error/${entry.slug}`;
+      const msg = document.createElement('span');
+      msg.className = 'error-msg';
+      msg.textContent = entry.error;
+      const title = document.createElement('span');
+      title.className = 'card-title';
+      title.textContent = entry.title;
+      a.append(msg, title);
+      matches.append(a);
+    }
+  });
+
+  // --- AI diagnosis ----------------------------------------------------------
+  diagnoseBtn.addEventListener('click', async () => {
+    const text = input.value.trim();
+    if (text.length < MIN_LEN || diagnoseBtn.disabled) return;
+
+    diagnoseBtn.disabled = true;
+    diagnoseBtn.setAttribute('aria-busy', 'true');
+    diagnoseBtn.textContent = 'Diagnosing…';
+    diagnoseNotice.classList.add('hidden');
+    diagnoseNotice.textContent = '';
+
+    try {
+      const res = await fetch('/api/diagnose', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ error: text }),
+      });
+      let data = null;
+      try {
+        data = await res.json();
+      } catch {
+        data = null;
+      }
+
+      if (res.ok && data && typeof data.diagnosis === 'string') {
+        diagnosis.innerHTML = renderMarkdown(data.diagnosis);
+        let meta = '';
+        if (typeof data.remaining === 'number') {
+          meta = `${data.remaining} free ${data.remaining === 1 ? 'diagnosis' : 'diagnoses'} left today`;
+        }
+        if (data.cached) {
+          meta += (meta ? ' · ' : '') + 'Served from cache — this fault was diagnosed before.';
+        }
+        diagnosisMeta.textContent = meta;
+        diagnosisMeta.classList.toggle('hidden', meta === '');
+        diagnosisWrap.classList.remove('hidden');
+      } else {
+        const msg =
+          (data && typeof data.error === 'string' && data.error) ||
+          'Something went wrong while diagnosing. Please try again in a moment.';
+        diagnoseNotice.textContent = msg;
+        diagnoseNotice.classList.remove('hidden');
+      }
+    } catch {
+      diagnoseNotice.textContent =
+        'Could not reach the diagnosis service — please try again.';
+      diagnoseNotice.classList.remove('hidden');
+    } finally {
+      diagnoseBtn.disabled = false;
+      diagnoseBtn.removeAttribute('aria-busy');
+      diagnoseBtn.textContent = 'Get AI diagnosis';
+    }
+  });
+</script>

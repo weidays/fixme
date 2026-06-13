@@ -1,0 +1,140 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import QuoteCTA from '../../components/QuoteCTA.astro';
+import PartsList from '../../components/PartsList.astro';
+import SafetyWarning from '../../components/SafetyWarning.astro';
+import { BRAND_LABELS, EQUIPMENT_LABELS } from '../../config';
+
+export async function getStaticPaths() {
+  const errors = await getCollection('errors');
+  return errors.map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const d = entry.data;
+const pageUrl = new URL(`/error/${entry.id}`, Astro.site).href;
+const brandLabel = BRAND_LABELS[d.brand];
+const equipmentLabel = EQUIPMENT_LABELS[d.equipment];
+const isEmergency = d.severity === 'emergency';
+const isDiy = d.severity === 'diy';
+
+const techArticle = {
+  '@context': 'https://schema.org',
+  '@type': 'TechArticle',
+  headline: d.title,
+  description: d.description,
+  datePublished: d.datePublished.toISOString(),
+  dateModified: d.dateModified.toISOString(),
+  mainEntityOfPage: pageUrl,
+  author: { '@type': 'Organization', name: 'fixme.vip Editorial', url: 'https://fixme.vip' },
+  publisher: { '@type': 'Organization', name: 'fixme.vip', url: 'https://fixme.vip' },
+  keywords: d.tags.join(', '),
+};
+
+const faqPage = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: d.faq.map((item) => ({
+    '@type': 'Question',
+    name: item.q,
+    acceptedAnswer: { '@type': 'Answer', text: item.a },
+  })),
+};
+
+const breadcrumbs = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://fixme.vip/' },
+    {
+      '@type': 'ListItem',
+      position: 2,
+      name: brandLabel,
+      item: `https://fixme.vip/brand/${d.brand}`,
+    },
+    { '@type': 'ListItem', position: 3, name: d.title, item: pageUrl },
+  ],
+};
+
+const fmt = (date: Date) =>
+  date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+---
+
+<BaseLayout
+  title={d.title}
+  description={d.description}
+  ogType="article"
+  jsonLd={[techArticle, faqPage, breadcrumbs]}
+>
+  <article class="fix">
+    <nav class="breadcrumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a> › <a href={`/brand/${d.brand}`}>{brandLabel}</a> ›
+      <a href={`/equipment/${d.equipment}`}>{equipmentLabel}</a>
+    </nav>
+
+    <span class="badge">{brandLabel} · {equipmentLabel}</span>
+    <h1>{d.title}</h1>
+    <p class="meta-line">
+      Last updated {fmt(d.dateModified)} · By fixme.vip Editorial{d.reviewedBy && ` · Reviewed by ${d.reviewedBy}`}
+    </p>
+
+    <div class="error-banner">{brandLabel} {equipmentLabel}: {d.code}</div>
+
+    {isEmergency && <SafetyWarning emergency />}
+
+    <div class="applies-to">
+      <strong>Applies to:</strong>
+      {d.appliesTo}
+    </div>
+
+    <div class="applies-to">
+      <strong>Typical repair cost:</strong>
+      {d.costRange}
+      {!isDiy && <> — <a href={`/quote?from=${entry.id}`}>compare free local quotes</a></>}
+    </div>
+
+    {/* Severity-driven rail ordering: DIY leads with parts, pro/emergency leads with quotes */}
+    {isDiy ? (
+      <PartsList parts={d.parts} />
+    ) : (
+      <QuoteCTA
+        source={entry.id}
+        urgent={isEmergency}
+        heading={isEmergency ? 'Get a licensed tech out — fast' : 'Get this fixed by a local pro'}
+      />
+    )}
+
+    <Content />
+
+    {!isEmergency && <SafetyWarning />}
+
+    {isDiy ? (
+      <QuoteCTA source={entry.id} heading="Rather not DIY it?" />
+    ) : (
+      <PartsList parts={d.parts} />
+    )}
+
+    <section class="faq-block">
+      <h2>Frequently asked questions</h2>
+      {
+        d.faq.map((item) => (
+          <details>
+            <summary>{item.q}</summary>
+            <p>{item.a}</p>
+          </details>
+        ))
+      }
+    </section>
+
+    <div class="applies-to">
+      Different code on your {equipmentLabel.toLowerCase()}?
+      <a href="/fix">Look it up</a> — and if we haven't covered it yet, telling
+      us is how it gets written next.
+    </div>
+  </article>
+</BaseLayout>

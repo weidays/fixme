@@ -1,0 +1,70 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+  ogType?: string;
+  jsonLd?: Record<string, unknown>[];
+  noindex?: boolean;
+}
+
+const { title, description, ogType = 'website', jsonLd = [], noindex = false } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex" />}
+    <link rel="canonical" href={canonical} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:site_name" content="fixme.vip" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔧</text></svg>"
+    />
+    {jsonLd.map((obj) => <script type="application/ld+json" set:html={JSON.stringify(obj)} />)}
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="inner">
+        <a href="/" class="logo">fixme<span class="vip">.vip</span></a>
+        <nav class="site-nav">
+          <a href="/equipment/furnace">Furnaces</a>
+          <a href="/equipment/air-conditioner">Air Conditioners</a>
+          <a href="/fix">Look up a code</a>
+          <a href="/quote">Get free quotes</a>
+        </nav>
+      </div>
+    </header>
+    <main>
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div class="inner">
+        <span>© 2026 fixme.vip — HVAC error codes, explained and fixed.</span>
+        <span><a href="/fix">Can't find your code?</a></span>
+      </div>
+      <div class="inner disclaimer">
+        <span>
+          Content is general guidance, not professional advice. Gas appliance
+          repairs should be performed by licensed technicians. fixme.vip
+          participates in affiliate programs and may earn from purchases and
+          quote requests made through this site.
+        </span>
+      </div>
+    </footer>
+  </body>
+</html>

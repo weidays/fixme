@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://fixme.vip/sitemap-index.xml
