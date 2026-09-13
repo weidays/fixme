@@ -1,0 +1,17 @@
+{
+  "carrier-furnace-code-12": {
+    "count": 1,
+    "last": "2026-09-13",
+    "reasons": [
+      "The page pushes the homeowner past the safe-check boundary. The table lists \"Replace 3A blade fuse (one try)\" as a DIY action and the FAQ tells the reader to \"check the low-voltage fuse\"; the parts bl"
+    ]
+  },
+  "carrier-furnace-code-21": {
+    "count": 1,
+    "last": "2026-09-13",
+    "reasons": [
+      "Fabricated cause. Carrier's own troubleshooting legend for status code 21 (Gas Heating Lockout) points to a mis-wire or a shorted gas-valve relay / relay driver circuit on the control — it is a contro",
+      "Cause ranking is not defensible for this specific code. Carrier 21 is a hard lockout that does not auto-reset (it clears only on a 115 VAC or 24 V power recycle), and the manufacturer-listed checks ar"
+    ]
+  }
+}
