@@ -34,6 +34,8 @@
 | `POST /api/diagnose` | AI 诊断（HVAC prompt + 安全边界，IP 日限免） |
 | `GET /api/queue` | 选题队列读取（ADMIN_TOKEN） |
 
+`public/_redirects`：旧域名路径 301 表（Cloudflare Pages 原生支持）。404 页会用旧路径推荐相近码页并把路径记进队列，`npm run queue-sync -- --dry-run` 直接输出可粘贴的 301 行。
+
 ## 内容工作流（飞轮）
 
 ```bash
@@ -48,6 +50,13 @@ ANTHROPIC_API_KEY=sk-... bun scripts/generate-code.ts \
 
 模型默认 `claude-opus-4-8`，可 `CLAUDE_MODEL=claude-haiku-4-5` 降本。
 
+```bash
+# 把访客在 /fix 搜过但没命中的码，按热度插到 content-backlog.json 顶部：
+ADMIN_TOKEN=... npm run queue-sync -- --dry-run
+```
+
+每日流水线：queue 同步 → 生成 → **AI 二审**（`scripts/review-draft.ts`）→ 分流：diy/pro 过审直接上线，emergency 进滚动人工审核 PR，不过审的记进 `content-rejected.json`。详见 [AUTOMATION.md](AUTOMATION.md)。
+
 ### 发布前质量清单（这是护城河，不是流程）
 
 - [ ] 故障码语义对照过品牌官方文档/安装手册，**没有编造型号特定的规格**
@@ -59,6 +68,7 @@ ANTHROPIC_API_KEY=sk-... bun scripts/generate-code.ts \
 
 ## 待办（上线关键路径）
 
+0. **10 月中前上线 200 篇以上暖炉页**（暖炉季 10–2 月是全年最大窗口）。backlog 已按品牌官方码表扩到近 600 条，暖炉码排最前。
 1. **变现地基**：注册 Service Direct / FlexOffers / CJ 的 publisher，确认 HVAC lead 联盟自助接入 + 流量门槛
 2. **质量样本**：人工精修 5–10 篇对标 PICKHVAC 深度的旗舰页（已有 carrier-furnace-code-33 作模板）
 3. **轨 A 上线**：Amazon Associates，把 [config.ts](src/config.ts) 的 `AMAZON_TAG` 换成真 tag

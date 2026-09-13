@@ -1,5 +1,12 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
+// Self-healing 404. This domain spent 11 years as a developer error-message
+// site, so old backlinks and stale search results still land here. Instead of
+// a dead end, the page (client-side, so crawlers/scanners see a plain 404):
+//   1. turns the dead path into search words and shows matching HVAC guides,
+//   2. prefills /fix with those words,
+//   3. logs the path to the topic queue as "404 /path" so
+//      `npm run queue-sync` can print a ranked redirect list for _redirects.
 ---
 
 <BaseLayout
@@ -14,7 +21,72 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       might — look up your error code or browse by brand.
     </p>
     <p>
-      <a class="btn" href="/fix">Look up your code</a>
+      <a class="btn" id="lookup-link" href="/fix">Look up your code</a>
     </p>
   </section>
+
+  <section id="suggestions" class="hidden" aria-live="polite">
+    <h2>Were you looking for one of these?</h2>
+    <div id="suggestion-cards"></div>
+  </section>
 </BaseLayout>
+
+<script>
+  const lookup = document.getElementById('lookup-link');
+  const wrap = document.getElementById('suggestions');
+  const cards = document.getElementById('suggestion-cards');
+
+  const path = location.pathname;
+  const words = decodeURIComponent(path)
+    .toLowerCase()
+    .replace(/\.(html?|php|aspx?)$/, '')
+    .split(/[^a-z0-9]+/)
+    .filter((t) => t.length > 1 && !['error', 'errors', 'fix', 'page', 'www', 'index'].includes(t));
+
+  const escapeHtml = (s) =>
+    String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+
+  if (words.length && lookup) {
+    lookup.setAttribute('href', '/fix?q=' + encodeURIComponent(words.join(' ')));
+  }
+
+  // Record the dead path so the redirect list can be built from real hits.
+  // Only humans run this — bot scans of /wp-login.php etc. never reach here.
+  if (path !== '/404' && path.length > 1 && path.length < 200) {
+    fetch('/api/report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ error: '404 ' + path }),
+    }).catch(() => {});
+  }
+
+  if (words.length && wrap && cards) {
+    fetch('/search-index.json')
+      .then((r) => r.json())
+      .then((index) => {
+        const scored = index
+          .map((entry) => ({
+            entry,
+            score: words.filter((t) => entry.search.includes(t)).length / words.length,
+          }))
+          .filter((m) => m.score >= 0.3)
+          .sort((a, b) => b.score - a.score)
+          .slice(0, 3);
+        if (!scored.length) return;
+        cards.innerHTML = scored
+          .map(
+            ({ entry }) =>
+              `<a class="error-card" href="/error/${encodeURIComponent(entry.slug)}">` +
+              `<span class="error-msg">${escapeHtml(entry.error)}</span>` +
+              `<span class="card-title">${escapeHtml(entry.title)}</span></a>`
+          )
+          .join('');
+        wrap.classList.remove('hidden');
+      })
+      .catch(() => {});
+  }
+</script>

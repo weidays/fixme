@@ -1,0 +1,39 @@
+# Cloudflare Pages redirects — https://developers.cloudflare.com/pages/configuration/redirects/
+#
+# WHY THIS FILE EXISTS
+# fixme.vip is an 11-year-old domain that used to be a developer error-message
+# site. Search engines and old backlinks still send visitors to the old URLs,
+# and every one of those hits lands on a 404 today — the domain authority those
+# links carry is wasted. Each 301 below turns a dead legacy URL into a live
+# HVAC page and passes that authority on.
+#
+# HOW TO FILL IT IN
+# 1. Easiest: the 404 page logs every dead path a real visitor hits, and
+#      ADMIN_TOKEN=... npm run queue-sync -- --dry-run
+#    prints them ranked under "Legacy 404 paths" as ready-to-paste lines.
+#    (Alternative: Cloudflare → Analytics & Logs → Traffic → HTTP, filter
+#    "Edge status code equals 404", "Path" tab, 30-day range.)
+# 2. Ignore bot noise (/wp-login.php, /.env, /xmlrpc.php, /admin, ...) — the
+#    404-page log already excludes it, since scanners don't run JavaScript.
+# 3. For each real legacy path add ONE line below:  <old path> <new path> <status>
+#    - map to the closest live page when there is a real match
+#    - otherwise send it into the lookup tool with the query prefilled
+# 4. Redeploy. Re-check the 404 list after a week and repeat.
+#
+# SYNTAX
+#   /old/path            /new/path                 301   # exact match
+#   /old/section/*       /fix                      301   # wildcard, drops the rest
+#   /old/section/*       /fix?q=:splat             301   # wildcard, keeps the rest as ?q=
+#   /old/:code           /error/carrier-furnace-code-:code  301   # placeholder
+# Limits: 2,000 static + 100 dynamic (wildcard/placeholder) rules. First match wins.
+# Note: the two Astro-served paths /fix and /error/... already exist — never
+# redirect a live page onto itself.
+#
+# ---- Legacy developer-error-site paths (fill in from the 404 report) ----
+# /error/some-old-dev-slug        /fix                       301
+# /errors/*                       /fix?q=:splat              301
+# /python/*                       /fix                       301
+
+# ---- Housekeeping ----
+# Old sitemap location → the one Astro generates now (search engines still ask for it).
+/sitemap.xml   /sitemap-index.xml   301

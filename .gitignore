@@ -8,3 +8,4 @@ drafts/
 .env.*
 .DS_Store
 archive/
+review-report.json

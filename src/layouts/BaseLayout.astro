@@ -11,6 +11,12 @@ interface Props {
 
 const { title, description, ogType = 'website', jsonLd = [], noindex = false } = Astro.props;
 const canonical = new URL(Astro.url.pathname, Astro.site);
+
+// Cloudflare Web Analytics (free, cookieless, bot-filtered — unlike the zone
+// request graph). Token comes from the CF dashboard → Analytics & Logs → Web
+// Analytics → Add a site → "Manual setup"; set it as CF_BEACON_TOKEN at build
+// time (GitHub Actions variable / local env). Unset = no beacon is rendered.
+const beaconToken = import.meta.env.CF_BEACON_TOKEN as string | undefined;
 ---
 
 <!doctype html>
@@ -36,6 +42,16 @@ const canonical = new URL(Astro.url.pathname, Astro.site);
       href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔧</text></svg>"
     />
     {jsonLd.map((obj) => <script type="application/ld+json" set:html={JSON.stringify(obj)} />)}
+    {
+      beaconToken && (
+        <script
+          is:inline
+          defer
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon={JSON.stringify({ token: beaconToken })}
+        />
+      )
+    }
   </head>
   <body>
     <header class="site-header">

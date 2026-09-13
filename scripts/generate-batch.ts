@@ -90,6 +90,15 @@ const covered = new Set(
     .filter((f) => f.endsWith('.md'))
     .map((f) => f.replace(/\.md$/, ''))
 );
+// Pages the AI reviewer rejected twice are parked until a human clears them
+// from content-rejected.json — otherwise the generator would retry forever.
+const REJECTED = join(root, 'content-rejected.json');
+const MAX_REJECTIONS = 2;
+const parked = new Set<string>();
+if (existsSync(REJECTED)) {
+  const rej = JSON.parse(readFileSync(REJECTED, 'utf-8')) as Record<string, { count: number }>;
+  for (const [slug, v] of Object.entries(rej)) if (v.count >= MAX_REJECTIONS) parked.add(slug);
+}
 
 interface PendingItem {
   brand: string;
@@ -103,7 +112,7 @@ const pending: PendingItem[] = [];
 
 for (const item of backlog) {
   const slug = slugify(item.brand!, item.equipment!, item.code!);
-  if (covered.has(slug)) continue;
+  if (covered.has(slug) || parked.has(slug)) continue;
   pending.push({ brand: item.brand!, equipment: item.equipment!, code: item.code!, severity: item.severity!, slug });
   if (pending.length >= COUNT) break;
 }
@@ -113,6 +122,7 @@ if (pending.length === 0) {
   process.exit(0);
 }
 
+if (parked.size) console.log(`${parked.size} backlog entr${parked.size === 1 ? 'y' : 'ies'} parked after ${MAX_REJECTIONS} failed reviews (see content-rejected.json).`);
 console.log(`Selected ${pending.length} of ${backlog.length} backlog entries (COUNT=${COUNT}):`);
 for (const p of pending) console.log(`  - ${p.slug}  [${p.severity}]`);
 

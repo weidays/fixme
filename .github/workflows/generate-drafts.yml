@@ -1,27 +1,46 @@
-name: Generate content drafts
+name: Content pipeline
 
-# Daily content flywheel. Generates draft HVAC pages from content-backlog.json,
-# validates them against the schema, and opens a PR. The PR is the review gate —
-# nothing publishes until you skim it and merge.
+# Daily content flywheel with a tiered review gate.
+#
+#   queue → backlog → generate drafts → AI review → route each page:
+#     pass + diy/pro    → committed to main and deployed (auto-publish)
+#     pass + emergency  → rolling PR "content/needs-review" for a human
+#     fail              → deleted; recorded in content-rejected.json
+#                         (two failures = parked until a human clears it)
+#
+# One rolling review PR replaces the old one-PR-per-day flow, which stalled at
+# 91 open PRs and regenerated the same ten pages every day.
 
 on:
   schedule:
-    - cron: '0 14 * * *' # 14:00 UTC daily — adjust to taste
+    - cron: '0 14 * * *' # 14:00 UTC daily
   workflow_dispatch:
     inputs:
       count:
         description: 'How many drafts to generate'
-        default: '10'
+        default: '15'
 
 permissions:
   contents: write
   pull-requests: write
+  actions: write # dispatch deploy.yml after publishing (bot pushes don't trigger it)
+
+concurrency:
+  group: content-pipeline
+  cancel-in-progress: false
+
+env:
+  REVIEW_BRANCH: content/needs-review
+  GH_TOKEN: ${{ github.token }}
 
 jobs:
-  generate:
+  pipeline:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -29,34 +48,142 @@ jobs:
 
       - run: npm install
 
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      # Work on the rolling review branch so pages already waiting for a human
+      # are visible to the generator (it skips existing files) and are never
+      # regenerated. The branch is created from main if it doesn't exist.
+      - name: Check out rolling review branch
+        run: |
+          if git ls-remote --exit-code --heads origin "$REVIEW_BRANCH" >/dev/null 2>&1; then
+            git fetch origin "$REVIEW_BRANCH"
+            git checkout -B "$REVIEW_BRANCH" "origin/$REVIEW_BRANCH"
+            git merge --no-edit origin/main || {
+              echo "::error::$REVIEW_BRANCH conflicts with main — resolve it in the review PR, then re-run."
+              exit 1
+            }
+          else
+            git checkout -B "$REVIEW_BRANCH" origin/main
+          fi
+
+      # Real demand first: what visitors typed into /fix with no match goes to
+      # the top of the backlog. Skipped when ADMIN_TOKEN isn't set.
+      - name: Sync topic queue into backlog
+        continue-on-error: true
+        env:
+          ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+          SITE_URL: ${{ vars.SITE_URL || 'https://fixme.vip' }}
+        run: |
+          if [ -z "$ADMIN_TOKEN" ]; then
+            echo "ADMIN_TOKEN secret not set — skipping queue sync."
+            exit 0
+          fi
+          npx tsx scripts/queue-to-backlog.ts
+
       - name: Generate drafts
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          COUNT: ${{ github.event.inputs.count || '10' }}
+          COUNT: ${{ github.event.inputs.count || '15' }}
           CLAUDE_MODEL: ${{ vars.CLAUDE_MODEL || 'claude-opus-4-8' }}
         run: npx tsx scripts/generate-batch.ts
 
-      # If a generated page violates the content schema, the build fails here
-      # and NO PR is opened — bad content is gated out automatically.
+      - name: Collect new drafts
+        id: new
+        run: |
+          files=$(git ls-files --others --exclude-standard -- 'src/content/errors/*.md' | tr '\n' ' ')
+          echo "files=$files" >> "$GITHUB_OUTPUT"
+          echo "New drafts: ${files:-none}"
+
+      - name: AI review
+        if: steps.new.outputs.files != ''
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          REVIEW_MODEL: ${{ vars.REVIEW_MODEL || 'claude-opus-5' }}
+        run: npx tsx scripts/review-draft.ts --out review-report.json ${{ steps.new.outputs.files }}
+
+      - name: Drop drafts that failed review
+        if: steps.new.outputs.files != ''
+        run: |
+          for f in $(jq -r '.results[] | select(.route=="drop") | .file' review-report.json); do
+            rm -f "$f"
+          done
+          npx tsx scripts/record-rejections.ts review-report.json
+
+      # Schema validation for everything on the branch (published + review pages).
       - name: Validate content (schema build)
         run: npm run build
 
-      - name: Open review PR
-        uses: peter-evans/create-pull-request@v6
-        with:
-          branch: content/auto-${{ github.run_id }}
-          title: 'Content drafts — review & merge to publish'
-          commit-message: 'Auto-generated HVAC content drafts'
-          add-paths: src/content/errors/*.md
-          body: |
-            Auto-generated draft batch from `content-backlog.json`.
+      - name: Publish approved pages to main
+        id: publish
+        run: |
+          publish=""
+          [ -f review-report.json ] && publish=$(jq -r '.results[] | select(.route=="publish") | .file' review-report.json)
+          for f in content-backlog.json content-rejected.json; do
+            git diff --quiet -- "$f" 2>/dev/null && git ls-files --error-unmatch "$f" >/dev/null 2>&1 || changed="$changed $f"
+          done
+          if [ -z "$publish" ] && [ -z "$changed" ]; then
+            echo "Nothing to publish."
+            exit 0
+          fi
+          git worktree add -q /tmp/main-wt main
+          for f in $publish; do cp "$f" "/tmp/main-wt/$f"; done
+          for f in $changed; do cp "$f" "/tmp/main-wt/$f"; done
+          (
+            cd /tmp/main-wt
+            git add src/content/errors content-backlog.json content-rejected.json 2>/dev/null || true
+            if git diff --cached --quiet; then echo "Nothing new for main."; exit 0; fi
+            list=$(for f in $publish; do echo "- $(basename "$f" .md)"; done)
+            git commit -q -m "Publish AI-reviewed HVAC pages" -m "$list"
+            git push origin main
+            echo "published=$(echo $publish | wc -w)" >> "$GITHUB_OUTPUT"
+          )
+          if [ -n "$publish" ]; then
+            gh workflow run deploy.yml --ref main
+          fi
+          # The review branch must not carry published pages or backlog edits —
+          # it picks them up from main on the next merge.
+          for f in $publish; do rm -f "$f"; done
+          for f in $changed; do git checkout -q -- "$f" 2>/dev/null || rm -f "$f"; done
 
-            **This PR is the review gate.** Skim each added file under
-            `src/content/errors/` before merging.
+      - name: Update rolling review PR
+        run: |
+          git add -A src/content/errors
+          if ! git diff --cached --quiet; then
+            list=$(git diff --cached --name-only --diff-filter=A | sed 's|.*/||; s|\.md$||; s|^|- |')
+            git commit -q -m "Pages awaiting human review" -m "$list"
+          fi
+          remote=$(git rev-parse "origin/$REVIEW_BRANCH" 2>/dev/null || echo none)
+          if [ "$(git rev-parse HEAD)" != "$remote" ]; then
+            git push origin "$REVIEW_BRANCH"
+          fi
+          pending=$(git diff --name-only origin/main..HEAD -- src/content/errors | wc -l)
+          if [ "$pending" -gt 0 ]; then
+            if [ -z "$(gh pr list --head "$REVIEW_BRANCH" --state open --json number --jq '.[0].number')" ]; then
+              gh pr create --base main --head "$REVIEW_BRANCH" \
+                --title "Pages awaiting human review (emergency / gas)" \
+                --body-file .github/review-pr-body.md
+            fi
+          else
+            echo "No pages awaiting human review."
+          fi
 
-            - ✅ Verify the code's meaning against the manufacturer manual
-            - ✅ Check safety boundaries (no unsafe gas / refrigerant / reset steps)
-            - ✅ Sanity-check the cost ranges
-            - ❌ Close this PR to discard the whole batch
-
-            Merging publishes these pages and triggers a deploy to Cloudflare Pages.
+      - name: Run summary
+        if: always()
+        run: |
+          {
+            echo "## Content pipeline"
+            if [ -f review-report.json ]; then
+              echo
+              echo "| Page | Severity | Result | Reviewer summary |"
+              echo "|---|---|---|---|"
+              jq -r '.results[] | "| \(.slug) | \(.severity) | \(.route) | \(.summary | gsub("\\|";"/") | .[0:160]) |"' review-report.json
+              echo
+              echo "Blocking issues on dropped pages:"
+              jq -r '.results[] | select(.route=="drop") | "- **\(.slug)**: " + ([.issues[] | select(.severity=="block") | .text] | join("; "))' review-report.json
+            else
+              echo "No new drafts this run."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

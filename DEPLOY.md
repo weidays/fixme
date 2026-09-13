@@ -38,6 +38,14 @@ npx wrangler pages deploy dist      # 首次会让你确认创建项目名（建
 | `CLAUDE_MODEL` | 普通（可选） | 默认 claude-opus-4-8，可设 claude-haiku-4-5 降本 | 用默认 |
 | `LEAD_FROM_EMAIL` | 普通（可选） | 验证域名后改成 `leads@fixme.vip` 之类 | 用 onboarding@resend.dev |
 
+**构建期变量**（不是 Pages 运行时变量，是 GitHub 仓库 → Settings → Variables）：
+
+| 变量 | 作用 | 哪来 |
+|---|---|---|
+| `CF_BEACON_TOKEN` | 在每页注入 Cloudflare Web Analytics beacon（免费、无 cookie、过滤爬虫，能看到真人的页面/来源/国家） | Cloudflare → Analytics & Logs → Web Analytics → Add a site → 选 **Manual setup**，复制 token |
+
+没设就不注入，站点照常构建。本地验证：`CF_BEACON_TOKEN=xxx npm run build`，看 `dist/index.html` 里有没有 `cloudflareinsights`。
+
 > **重要**：站点不配任何 secret 也能上线——静态码页、品牌/设备导航、码查询、**lead 表单存 KV** 全部照常工作。AI 诊断和邮件提醒是配了对应 key 才启用。所以可以**先部署、再逐个补 key**。
 
 设完变量后，重新部署一次（或在控制台 Retry deployment）让变量生效。
@@ -46,7 +54,8 @@ npx wrangler pages deploy dist      # 首次会让你确认创建项目名（建
 
 1. **WAF 速率限制**（Security → WAF → Rate limiting）：`/api/diagnose` ≤5/分、`/api/lead` + `/api/report` ≤20/分。详见 [SECURITY.md](SECURITY.md)。
 2. **绑定自定义域名** fixme.vip（Pages → Custom domains）。
-3. 上线后到 Google Search Console 提交 `https://fixme.vip/sitemap-index.xml`。
+3. 上线后到 Google Search Console 提交 `https://fixme.vip/sitemap-index.xml`。GSC 是唯一能看到「人在搜什么词、哪页有点击」的地方，Cloudflare 的请求数混着爬虫看不出来。
+4. **旧网址 301**：域名以前是开发者报错站，旧链接还在往 404 送流量。404 页现在会先用旧路径里的词推荐相近的码页，并把路径记进选题队列；跑 `ADMIN_TOKEN=... npm run queue-sync -- --dry-run` 就能拿到按热度排好的旧路径和可直接粘贴的 301 行，填进 [public/_redirects](public/_redirects)。
 
 ## 后续每次更新
 
