@@ -55,7 +55,7 @@ ANTHROPIC_API_KEY=sk-... bun scripts/generate-code.ts \
 ADMIN_TOKEN=... npm run queue-sync -- --dry-run
 ```
 
-每日生成工作流会先自动跑这一步（需仓库 Secret `ADMIN_TOKEN`），详见 [AUTOMATION.md](AUTOMATION.md)。
+每日流水线：queue 同步 → 生成 → **AI 二审**（`scripts/review-draft.ts`）→ 分流：diy/pro 过审直接上线，emergency 进滚动人工审核 PR，不过审的记进 `content-rejected.json`。详见 [AUTOMATION.md](AUTOMATION.md)。
 
 ### 发布前质量清单（这是护城河，不是流程）
 
@@ -68,6 +68,7 @@ ADMIN_TOKEN=... npm run queue-sync -- --dry-run
 
 ## 待办（上线关键路径）
 
+0. **10 月中前上线 200 篇以上暖炉页**（暖炉季 10–2 月是全年最大窗口）。backlog 已按品牌官方码表扩到近 600 条，暖炉码排最前。
 1. **变现地基**：注册 Service Direct / FlexOffers / CJ 的 publisher，确认 HVAC lead 联盟自助接入 + 流量门槛
 2. **质量样本**：人工精修 5–10 篇对标 PICKHVAC 深度的旗舰页（已有 carrier-furnace-code-33 作模板）
 3. **轨 A 上线**：Amazon Associates，把 [config.ts](src/config.ts) 的 `AMAZON_TAG` 换成真 tag
