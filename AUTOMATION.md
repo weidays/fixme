@@ -13,6 +13,7 @@
           ──▶ generate-batch.ts     从 content-backlog.json 取 COUNT 个未覆盖的码生成草稿
           ──▶ review-draft.ts       AI 二审：按 README 质量清单逐条检查（码是否真实存在、
                                     有无编造规格、安全边界、紧急页处理、价格合理性、无假署名、不薄）
+                                    不过的页按审稿意见重写一次、再审一次；仍不过才打回
           ──▶ 分流：
                 通过 + diy/pro     ──▶ 直接提交到 main → 自动部署上线
                 通过 + emergency   ──▶ 进滚动 PR「content/needs-review」等你合并

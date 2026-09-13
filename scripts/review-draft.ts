@@ -11,11 +11,16 @@
  *   pass + severity emergency → human review PR (gas / CO pages always get a human)
  *   fail                      → dropped with reasons (regenerated another day)
  *
+ * With --revise, a page that fails gets ONE rewrite with the reviewer's notes,
+ * then a fresh review; if that passes, the revised page replaces the draft.
+ * Most failures are "close to publishable" (one unsafe DIY step, one invented
+ * cause), so this roughly doubles the pass rate for the cost of one extra call.
+ *
  * Usage:
- *   ANTHROPIC_API_KEY=... npx tsx scripts/review-draft.ts --out review-report.json src/content/errors/a.md [b.md ...]
+ *   ANTHROPIC_API_KEY=... npx tsx scripts/review-draft.ts --revise --out review-report.json src/content/errors/a.md [b.md ...]
  *   npx tsx scripts/review-draft.ts --mock pass --out report.json a.md    # no API call (tests)
  *
- * Env: ANTHROPIC_API_KEY, REVIEW_MODEL (default claude-opus-5).
+ * Env: ANTHROPIC_API_KEY, REVIEW_MODEL (default claude-opus-5), REVISE_MODEL (default claude-opus-5).
  * Exit code is 0 even when drafts fail review — the report carries verdicts.
  * Non-zero only for configuration or API errors.
  */
@@ -26,6 +31,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod';
 import yaml from 'js-yaml';
+import { validateDraft } from './_draft-schema';
 
 const Verdict = z.object({
   verdict: z.enum(['pass', 'fail']),
@@ -50,6 +56,7 @@ export interface ReviewResult {
   code_exists_for_brand: string;
   issues: { severity: string; section: string; text: string }[];
   summary: string;
+  revised?: boolean; // page was rewritten once from reviewer notes and re-reviewed
 }
 
 function arg(name: string): string | undefined {
@@ -58,8 +65,10 @@ function arg(name: string): string | undefined {
 }
 const OUT = arg('out') ?? 'review-report.json';
 const MOCK = arg('mock'); // 'pass' | 'fail' — test hook, never set in CI
+const REVISE = process.argv.includes('--revise');
 const files = process.argv.slice(2).filter((a, i, all) => !a.startsWith('--') && all[i - 1] !== '--out' && all[i - 1] !== '--mock');
 const model = process.env.REVIEW_MODEL ?? 'claude-opus-5';
+const reviseModel = process.env.REVISE_MODEL ?? 'claude-opus-5';
 
 const SYSTEM = `You are the senior technical editor for fixme.vip, a US HVAC error-code knowledge base for homeowners. Pages are monetized through repair-lead networks that audit content quality, and ranked by Google, which penalizes thin or fabricated AI content. A page that misleads a homeowner about a gas appliance can hurt someone. Review strictly. When in doubt about a factual claim, FAIL the page and say why.
 
@@ -93,45 +102,92 @@ function route(pageSeverity: string, v: VerdictT): ReviewResult['route'] {
   return 'publish';
 }
 
+async function review(client: Anthropic | null, md: string, fm: Record<string, unknown>, pageSeverity: string): Promise<VerdictT> {
+  if (MOCK) {
+    return {
+      verdict: MOCK === 'fail' ? 'fail' : 'pass',
+      code_exists_for_brand: 'yes',
+      issues: MOCK === 'fail' ? [{ severity: 'block', section: 'mock', text: 'mock failure' }] : [],
+      summary: `mock ${MOCK}`,
+    };
+  }
+  const response = await client!.messages.parse({
+    model,
+    max_tokens: 16000,
+    system: [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }],
+    messages: [
+      {
+        role: 'user',
+        content: `Review this draft page. Brand: ${String(fm.brand)} · Equipment: ${String(fm.equipment)} · Code: ${String(fm.code)} · Declared severity: ${pageSeverity}\n\n<draft>\n${md}\n</draft>`,
+      },
+    ],
+    output_config: { format: zodOutputFormat(Verdict) },
+  });
+  if (response.stop_reason === 'refusal' || !response.parsed_output) {
+    return {
+      verdict: 'fail',
+      code_exists_for_brand: 'unsure',
+      issues: [{ severity: 'block', section: 'review', text: `Reviewer returned no verdict (stop_reason=${response.stop_reason}).` }],
+      summary: 'No verdict — treated as fail so nothing unreviewed is published.',
+    };
+  }
+  const v = response.parsed_output;
+  // Belt and braces: a "pass" with a block issue, or a code the reviewer
+  // believes doesn't exist, is a fail regardless of the top-level verdict.
+  if (v.issues.some((i) => i.severity === 'block') || v.code_exists_for_brand === 'no') v.verdict = 'fail';
+  return v;
+}
+
+/** One rewrite from the reviewer's notes. Returns the revised markdown, or null if it isn't schema-valid. */
+async function revise(client: Anthropic, md: string, v: VerdictT): Promise<string | null> {
+  const notes = v.issues.map((i) => `- [${i.severity}] ${i.section}: ${i.text}`).join('\n');
+  const response = await client.messages.create({
+    model: reviseModel,
+    max_tokens: 16000,
+    messages: [
+      {
+        role: 'user',
+        content: `You are revising a fixme.vip HVAC error-code page for US homeowners. A senior technical editor reviewed the draft below and found these issues:
+
+${notes}
+
+Rewrite the COMPLETE page — frontmatter and body — fixing every issue above, blocking and minor. Keep everything the editor did not object to. Do not add new claims, part numbers, or model-specific specs. Homeowner actions stay within: thermostat settings and batteries, air filter, breaker reset, one reset of a locked-out unit, visible vents, condensate line, exterior panels; everything inside the cabinet is technician work. The frontmatter must keep the same schema and the same brand, equipment, code and severity values; wrap title, code, description, costRange and appliesTo in double quotes; valid YAML. Output only the markdown file — no preamble, no code fence.
+
+<draft>
+${md}
+</draft>`,
+      },
+    ],
+  });
+  const text = response.content.filter((b) => b.type === 'text').map((b) => b.text).join('').trim();
+  if (!text) return null;
+  const reason = validateDraft(text);
+  if (reason) {
+    console.error(`      revision rejected by schema check: ${reason}`);
+    return null;
+  }
+  return text;
+}
+
 async function reviewOne(client: Anthropic | null, file: string): Promise<ReviewResult> {
   const md = readFileSync(file, 'utf-8');
   const fm = frontmatter(md);
   const slug = basename(file).replace(/\.md$/, '');
   const pageSeverity = String(fm.severity ?? 'pro');
 
-  let v: VerdictT;
-  if (MOCK) {
-    v = {
-      verdict: MOCK === 'fail' ? 'fail' : 'pass',
-      code_exists_for_brand: 'yes',
-      issues: MOCK === 'fail' ? [{ severity: 'block', section: 'mock', text: 'mock failure' }] : [],
-      summary: `mock ${MOCK}`,
-    };
-  } else {
-    const response = await client!.messages.parse({
-      model,
-      max_tokens: 16000,
-      system: [{ type: 'text', text: SYSTEM, cache_control: { type: 'ephemeral' } }],
-      messages: [
-        {
-          role: 'user',
-          content: `Review this draft page. Brand: ${String(fm.brand)} · Equipment: ${String(fm.equipment)} · Code: ${String(fm.code)} · Declared severity: ${pageSeverity}\n\n<draft>\n${md}\n</draft>`,
-        },
-      ],
-      output_config: { format: zodOutputFormat(Verdict) },
-    });
-    if (response.stop_reason === 'refusal' || !response.parsed_output) {
-      v = {
-        verdict: 'fail',
-        code_exists_for_brand: 'unsure',
-        issues: [{ severity: 'block', section: 'review', text: `Reviewer returned no verdict (stop_reason=${response.stop_reason}).` }],
-        summary: 'No verdict — treated as fail so nothing unreviewed is published.',
-      };
-    } else {
-      v = response.parsed_output;
-      // Belt and braces: a "pass" with a block issue, or a code the reviewer
-      // believes doesn't exist, is a fail regardless of the top-level verdict.
-      if (v.issues.some((i) => i.severity === 'block') || v.code_exists_for_brand === 'no') v.verdict = 'fail';
+  let v = await review(client, md, fm, pageSeverity);
+  let revised = false;
+
+  if (v.verdict === 'fail' && REVISE && client && v.code_exists_for_brand !== 'no') {
+    console.log(`   ↻ ${slug}: failed review — revising once from the editor's notes`);
+    const next = await revise(client, md, v);
+    if (next) {
+      const v2 = await review(client, next, frontmatter(next), pageSeverity);
+      if (v2.verdict === 'pass') {
+        writeFileSync(file, next.endsWith('\n') ? next : next + '\n');
+        revised = true;
+      }
+      v = v2; // report the latest verdict either way
     }
   }
 
@@ -144,6 +200,7 @@ async function reviewOne(client: Anthropic | null, file: string): Promise<Review
     code_exists_for_brand: v.code_exists_for_brand,
     issues: v.issues,
     summary: v.summary,
+    revised,
   };
 }
 
@@ -168,7 +225,7 @@ async function main(): Promise<void> {
       const r = await reviewOne(client, file);
       results.push(r);
       const flag = r.route === 'publish' ? '✅ publish' : r.route === 'review' ? '👀 review' : '❌ drop';
-      console.log(`${flag}  ${r.slug}  — ${r.summary}`);
+      console.log(`${flag}${r.revised ? ' (revised)' : ''}  ${r.slug}  — ${r.summary}`);
       for (const i of r.issues) console.log(`      [${i.severity}] ${i.section}: ${i.text}`);
     } catch (e) {
       // An API failure on one page must not publish it by accident: record as drop.

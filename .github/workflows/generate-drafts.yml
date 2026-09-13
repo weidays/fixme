@@ -102,7 +102,8 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
           REVIEW_MODEL: ${{ vars.REVIEW_MODEL || 'claude-opus-5' }}
-        run: npx tsx scripts/review-draft.ts --out review-report.json ${{ steps.new.outputs.files }}
+          REVISE_MODEL: ${{ vars.REVISE_MODEL || 'claude-opus-5' }}
+        run: npx tsx scripts/review-draft.ts --revise --out review-report.json ${{ steps.new.outputs.files }}
 
       - name: Drop drafts that failed review
         if: steps.new.outputs.files != ''
@@ -155,19 +156,25 @@ jobs:
             list=$(git diff --cached --name-only --diff-filter=A | sed 's|.*/||; s|\.md$||; s|^|- |')
             git commit -q -m "Pages awaiting human review" -m "$list"
           fi
+          # Pages on this branch that main does not have (three-dot: since the merge base).
+          # If HEAD is an ancestor of main there is nothing to review at all.
+          if git merge-base --is-ancestor HEAD origin/main; then
+            pending=0
+          else
+            pending=$(git diff --name-only origin/main...HEAD -- src/content/errors | wc -l)
+          fi
+          if [ "$pending" -eq 0 ]; then
+            echo "No pages awaiting human review."
+            exit 0
+          fi
           remote=$(git rev-parse "origin/$REVIEW_BRANCH" 2>/dev/null || echo none)
           if [ "$(git rev-parse HEAD)" != "$remote" ]; then
             git push origin "$REVIEW_BRANCH"
           fi
-          pending=$(git diff --name-only origin/main..HEAD -- src/content/errors | wc -l)
-          if [ "$pending" -gt 0 ]; then
-            if [ -z "$(gh pr list --head "$REVIEW_BRANCH" --state open --json number --jq '.[0].number')" ]; then
-              gh pr create --base main --head "$REVIEW_BRANCH" \
-                --title "Pages awaiting human review (emergency / gas)" \
-                --body-file .github/review-pr-body.md
-            fi
-          else
-            echo "No pages awaiting human review."
+          if [ -z "$(gh pr list --head "$REVIEW_BRANCH" --state open --json number --jq '.[0].number')" ]; then
+            gh pr create --base main --head "$REVIEW_BRANCH" \
+              --title "Pages awaiting human review (emergency / gas)" \
+              --body-file .github/review-pr-body.md
           fi
 
       - name: Run summary
@@ -179,7 +186,7 @@ jobs:
               echo
               echo "| Page | Severity | Result | Reviewer summary |"
               echo "|---|---|---|---|"
-              jq -r '.results[] | "| \(.slug) | \(.severity) | \(.route) | \(.summary | gsub("\\|";"/") | .[0:160]) |"' review-report.json
+              jq -r '.results[] | "| \(.slug) | \(.severity) | \(.route)\(if .revised then " (revised)" else "" end) | \(.summary | gsub("\\|";"/") | .[0:160]) |"' review-report.json
               echo
               echo "Blocking issues on dropped pages:"
               jq -r '.results[] | select(.route=="drop") | "- **\(.slug)**: " + ([.issues[] | select(.severity=="block") | .text] | join("; "))' review-report.json
