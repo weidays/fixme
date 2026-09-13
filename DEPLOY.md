@@ -55,7 +55,7 @@ npx wrangler pages deploy dist      # 首次会让你确认创建项目名（建
 1. **WAF 速率限制**（Security → WAF → Rate limiting）：`/api/diagnose` ≤5/分、`/api/lead` + `/api/report` ≤20/分。详见 [SECURITY.md](SECURITY.md)。
 2. **绑定自定义域名** fixme.vip（Pages → Custom domains）。
 3. 上线后到 Google Search Console 提交 `https://fixme.vip/sitemap-index.xml`。GSC 是唯一能看到「人在搜什么词、哪页有点击」的地方，Cloudflare 的请求数混着爬虫看不出来。
-4. **旧网址 301**：域名以前是开发者报错站，旧链接还在往 404 送流量。到 Cloudflare Analytics 把状态码筛成 404、看 Path 分页，把真实旧路径填进 [public/_redirects](public/_redirects)（文件头有填法），把旧权重导进新页面。
+4. **旧网址 301**：域名以前是开发者报错站，旧链接还在往 404 送流量。404 页现在会先用旧路径里的词推荐相近的码页，并把路径记进选题队列；跑 `ADMIN_TOKEN=... npm run queue-sync -- --dry-run` 就能拿到按热度排好的旧路径和可直接粘贴的 301 行，填进 [public/_redirects](public/_redirects)。
 
 ## 后续每次更新
 

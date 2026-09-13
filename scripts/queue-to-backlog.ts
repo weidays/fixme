@@ -20,7 +20,8 @@
  *
  * Entries whose brand or equipment can't be recognised are NOT guessed — they
  * are printed under "needs a human" so you can add them by hand (or ignore
- * the junk). Nothing here publishes anything: the backlog only feeds the
+ * the junk). Entries the 404 page logs ("404 /old/path") are split out into a
+ * ranked "legacy 404 paths" list with ready-to-paste public/_redirects lines. Nothing here publishes anything: the backlog only feeds the
  * draft generator, and the PR is still the review gate.
  */
 
@@ -253,11 +254,17 @@ async function main(): Promise<void> {
   const fresh = new Map<string, Parsed>();
   const alreadyCovered: Parsed[] = [];
   const needsHuman: { raw: string; count: number; why: string }[] = [];
+  const dead: { path: string; count: number }[] = [];
   let belowThreshold = 0;
 
   for (const entry of queue.items) {
     if (entry.count < MIN_COUNT) {
       belowThreshold++;
+      continue;
+    }
+    const m404 = entry.error.match(/^404 (\/\S*)$/);
+    if (m404) {
+      dead.push({ path: m404[1], count: entry.count });
       continue;
     }
     const r = parseEntry(entry);
@@ -287,6 +294,16 @@ async function main(): Promise<void> {
     console.log(`\nNeeds a human (${needsHuman.length}) — add by hand to content-backlog.json or ignore:`);
     for (const n of needsHuman.sort((a, b) => b.count - a.count))
       console.log(`  ? ×${n.count} (${n.why}): "${n.raw.replace(/\s+/g, ' ').slice(0, 90)}"`);
+  }
+  if (dead.length) {
+    dead.sort((a, b) => b.count - a.count);
+    console.log(`\nLegacy 404 paths (${dead.length}) — real visitors hitting dead URLs. Paste the ones that`);
+    console.log('look like old content into public/_redirects (pointed at the closest live page):');
+    for (const d of dead) {
+      const words = d.path.replace(/\.(html?|php|aspx?)$/, '').split(/[^a-zA-Z0-9]+/).filter((w) => w.length > 1);
+      const target = words.length ? `/fix?q=${encodeURIComponent(words.join(' '))}` : '/fix';
+      console.log(`  ${d.path.padEnd(48)} ${target.padEnd(40)} 301   # ×${d.count}`);
+    }
   }
   if (belowThreshold) console.log(`\n${belowThreshold} entr${belowThreshold === 1 ? 'y' : 'ies'} below --min-count ${MIN_COUNT} skipped.`);
 

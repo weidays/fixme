@@ -34,7 +34,7 @@
 | `POST /api/diagnose` | AI 诊断（HVAC prompt + 安全边界，IP 日限免） |
 | `GET /api/queue` | 选题队列读取（ADMIN_TOKEN） |
 
-`public/_redirects`：旧域名路径 301 表（Cloudflare Pages 原生支持），文件头有填法。
+`public/_redirects`：旧域名路径 301 表（Cloudflare Pages 原生支持）。404 页会用旧路径推荐相近码页并把路径记进队列，`npm run queue-sync -- --dry-run` 直接输出可粘贴的 301 行。
 
 ## 内容工作流（飞轮）
 

@@ -8,10 +8,13 @@
 # HVAC page and passes that authority on.
 #
 # HOW TO FILL IT IN
-# 1. Cloudflare dashboard → fixme.vip → Analytics & Logs → Traffic → HTTP.
-#    Add filter "Edge status code equals 404", open the "Path" tab, widen the
-#    time range to 30 days. That list is your legacy traffic, ranked.
-# 2. Ignore bot noise (/wp-login.php, /.env, /xmlrpc.php, /admin, ...).
+# 1. Easiest: the 404 page logs every dead path a real visitor hits, and
+#      ADMIN_TOKEN=... npm run queue-sync -- --dry-run
+#    prints them ranked under "Legacy 404 paths" as ready-to-paste lines.
+#    (Alternative: Cloudflare → Analytics & Logs → Traffic → HTTP, filter
+#    "Edge status code equals 404", "Path" tab, 30-day range.)
+# 2. Ignore bot noise (/wp-login.php, /.env, /xmlrpc.php, /admin, ...) — the
+#    404-page log already excludes it, since scanners don't run JavaScript.
 # 3. For each real legacy path add ONE line below:  <old path> <new path> <status>
 #    - map to the closest live page when there is a real match
 #    - otherwise send it into the lookup tool with the query prefilled
