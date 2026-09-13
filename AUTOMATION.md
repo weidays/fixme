@@ -62,14 +62,27 @@ git push -u origin main
 
 ## 喂内容飞轮:扩充 backlog
 
-生成器是按 [content-backlog.json](content-backlog.json) 从上往下做的。要让它一直有料、且**优先做真实需求**:
+生成器是按 [content-backlog.json](content-backlog.json) 从上往下做的。要让它一直有料、且**优先做真实需求**,有一条自动闭环:
 
-```bash
-# 看用户搜了但你没覆盖的码（选题队列）：
-curl https://fixme.vip/api/queue -H "Authorization: Bearer 你的ADMIN_TOKEN"
+```
+访客在 /fix 输入没命中的码 ──▶ POST /api/report 进选题队列(KV)
+        ──▶ 每天生成前 queue-to-backlog.ts 拉队列、解析成 {brand, equipment, code, severity}
+        ──▶ 新条目按搜索次数插到 backlog 最顶部(带 "_source": "queue", "_count": N)
+        ──▶ 当天的草稿优先做这些
 ```
 
-把高频的码**加到 content-backlog.json 顶部**,下一次生成就优先做它们。backlog 空了生成器会提示你补。
+要启用:仓库 Secrets 加 `ADMIN_TOKEN`(和 Cloudflare Pages 上配的同一串)。没配就静默跳过。
+
+手动跑(本地):
+
+```bash
+ADMIN_TOKEN=... npm run queue-sync -- --dry-run   # 先看会加什么
+ADMIN_TOKEN=... npm run queue-sync                # 写入 backlog 顶部
+npm run queue-sync -- --from saved.json --dry-run # 离线:喂一份保存下来的 /api/queue 响应
+npm run queue-sync -- --min-count 2               # 只收被搜过 ≥2 次的
+```
+
+解析规则:品牌必须是站内 10 个品牌之一,设备必须能认出(furnace / AC / heat pump / mini split / thermostat),码取「code 33 / 4 flashes / E5」这类,认不出码就退化成症状(Not cooling / Gas smell / Short cycling…)。**认不出品牌或设备的不猜**,脚本会单独列出「needs a human」让你手动决定(大多是垃圾或站外品牌,如 Daikin)。已发布或已在 backlog 里的只显示搜索次数、不重复加。
 
 ## 先本地试一下(不花钱、不发请求)
 

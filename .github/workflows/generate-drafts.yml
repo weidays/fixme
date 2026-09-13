@@ -29,6 +29,22 @@ jobs:
 
       - run: npm install
 
+      # Pull real demand first: every error a visitor typed into /fix that no
+      # page matched goes to the top of the backlog, so today's drafts cover
+      # what people actually searched. Skipped when ADMIN_TOKEN isn't set;
+      # a failure (site down, token wrong) never blocks the batch.
+      - name: Sync topic queue into backlog
+        continue-on-error: true
+        env:
+          ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+          SITE_URL: ${{ vars.SITE_URL || 'https://fixme.vip' }}
+        run: |
+          if [ -z "$ADMIN_TOKEN" ]; then
+            echo "ADMIN_TOKEN secret not set — skipping queue sync."
+            exit 0
+          fi
+          npx tsx scripts/queue-to-backlog.ts
+
       - name: Generate drafts
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -47,9 +63,12 @@ jobs:
           branch: content/auto-${{ github.run_id }}
           title: 'Content drafts — review & merge to publish'
           commit-message: 'Auto-generated HVAC content drafts'
-          add-paths: src/content/errors/*.md
+          add-paths: |
+            src/content/errors/*.md
+            content-backlog.json
           body: |
-            Auto-generated draft batch from `content-backlog.json`.
+            Auto-generated draft batch from `content-backlog.json`. Entries
+            tagged `"_source": "queue"` came from real visitor searches on /fix.
 
             **This PR is the review gate.** Skim each added file under
             `src/content/errors/` before merging.

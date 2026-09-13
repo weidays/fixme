@@ -34,6 +34,8 @@
 | `POST /api/diagnose` | AI 诊断（HVAC prompt + 安全边界，IP 日限免） |
 | `GET /api/queue` | 选题队列读取（ADMIN_TOKEN） |
 
+`public/_redirects`：旧域名路径 301 表（Cloudflare Pages 原生支持），文件头有填法。
+
 ## 内容工作流（飞轮）
 
 ```bash
@@ -47,6 +49,13 @@ ANTHROPIC_API_KEY=sk-... bun scripts/generate-code.ts \
 ```
 
 模型默认 `claude-opus-4-8`，可 `CLAUDE_MODEL=claude-haiku-4-5` 降本。
+
+```bash
+# 把访客在 /fix 搜过但没命中的码，按热度插到 content-backlog.json 顶部：
+ADMIN_TOKEN=... npm run queue-sync -- --dry-run
+```
+
+每日生成工作流会先自动跑这一步（需仓库 Secret `ADMIN_TOKEN`），详见 [AUTOMATION.md](AUTOMATION.md)。
 
 ### 发布前质量清单（这是护城河，不是流程）
 

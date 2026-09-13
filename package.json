@@ -8,7 +8,8 @@
     "build": "astro build",
     "preview": "astro preview",
     "generate": "bun scripts/generate-code.ts",
-    "generate-batch": "tsx scripts/generate-batch.ts"
+    "generate-batch": "tsx scripts/generate-batch.ts",
+    "queue-sync": "tsx scripts/queue-to-backlog.ts"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.4.1",
