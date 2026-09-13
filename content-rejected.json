@@ -1,17 +1,128 @@
 {
   "carrier-furnace-code-12": {
-    "count": 1,
+    "count": 2,
     "last": "2026-09-13",
     "reasons": [
-      "The page pushes the homeowner past the safe-check boundary. The table lists \"Replace 3A blade fuse (one try)\" as a DIY action and the FAQ tells the reader to \"check the low-voltage fuse\"; the parts bl"
+      "Control board replacement is quoted at \"$350 – $600\" (and the frontmatter costRange caps the whole page at \"$600 if the control board must be replaced\"). A Carrier furnace control board replacement in"
     ]
   },
   "carrier-furnace-code-21": {
+    "count": 2,
+    "last": "2026-09-13",
+    "reasons": [
+      "The code label is right but the mechanism is wrong. Carrier's published status-code legend defines 21 as GAS HEATING LOCKOUT — the control will not respond to a call for heat (W) — and lists the cause",
+      "Cause ranking is not defensible for this code and appears reverse-engineered from a generic ignition-failure page. The top two entries (repeated ignition failures, low/interrupted gas supply) are Code",
+      "Listing a 'Manometer for gas pressure / digital manometer hvac gas pressure' as a homeowner-purchasable part on a page rated 'pro' invites DIY gas-pressure measurement at the manifold — inside the bur",
+      "The symptom table contradicts the actual code. With a true Code 21 lockout the furnace typically does not respond to the heat call at all; rows such as 'Furnace locks out after several clicks/attempts"
+    ]
+  },
+  "bryant-furnace-code-12": {
     "count": 1,
     "last": "2026-09-13",
     "reasons": [
-      "Fabricated cause. Carrier's own troubleshooting legend for status code 21 (Gas Heating Lockout) points to a mis-wire or a shorted gas-valve relay / relay driver circuit on the control — it is a contro",
-      "Cause ranking is not defensible for this specific code. Carrier 21 is a hard lockout that does not auto-reset (it clears only on a 115 VAC or 24 V power recycle), and the manufacturer-listed checks ar"
+      "Wrong meaning. On Carrier/Bryant furnaces using the HK42FZ-style board, status code 12 is 'Blower On after Power Up (BOPU)' — it indicates 115VAC or 24VAC power was interrupted during a heating or coo",
+      "Cause ranking is not defensible for this code. The single most common trigger for a 12 is a simple 115V power interruption — utility outage or brownout, someone flipping the furnace disconnect switch,",
+      "Severity 'pro' is inflated for the documented meaning. Because code 12 most often follows a power interruption, the honest guidance is: restore power, let the unit run one full cycle, and only escalat",
+      "Fabricated specific: Bryant residential gas furnaces flash status codes on a single amber/LED indicator, or on communicating models display a short alphanumeric code on the wall control — there is no ",
+      "Specific part numbers should not be asserted without verification. 'HT01BD250' is given as the transformer to search for and 'HK42FZ' is presented as if a single board fits; the HK42FZ family spans ma"
+    ]
+  },
+  "bryant-furnace-code-21": {
+    "count": 1,
+    "last": "2026-09-13",
+    "reasons": [
+      "The cause list is mis-ranked and partly fabricated for this specific code. On Carrier/Bryant boards, Status Code 21 is a 'gas heating lockout' whose documented causes are narrow: gas valve relay on th",
+      "Flatly asserting 'It is not an active gas leak' is an unsupported safety reassurance for this particular code. The documented trigger on Carrier/Bryant boards is the control detecting the gas valve re",
+      "Step 6 ('Measure manifold and inlet gas pressure to rule out a supply problem') is not a defensible diagnostic path for Code 21 and reinforces the fabricated gas-supply cause above. Presenting it as p"
+    ]
+  },
+  "bryant-furnace-code-22": {
+    "count": 1,
+    "last": "2026-09-13",
+    "reasons": [
+      "Meaning is muddied and partly wrong. On Carrier/Bryant LED status boards, Status Code 22 is documented as 'abnormal flame-proving signal' — flame is sensed (or the control believes flame is present) w",
+      "Cause ranking is indefensible for this code. A 'weak or contaminated flame sensor' is ranked #1, but a filmed/dirty sensor produces a LOW flame signal, which causes failure-to-prove-flame lockouts — n",
+      "The page ends the cost section by endorsing DIY flame-sensor cleaning ('can be $0 if you're comfortable'). The flame sensor sits in the burner compartment adjacent to the burners and gas train — this ",
+      "costRange says '$0 DIY – $450 if a control board or gas valve needs replacement,' but the body lists gas valve $300–600 and control board $350–700+. The frontmatter understates the realistic ceiling a",
+      "Because Code 22 commonly indicates flame present with the valve de-energized (i.e., potential gas passing through a valve that should be closed), the page must open the safe-checks section with an exp",
+      "Row 2 ('Furnace lights then locks out → weak/dirty flame sensor → clean/replace sensor') describes flame-loss/ignition-lockout behavior, not Code 22, and assigns the wrong diagnosis. Row 5 ('Delayed o"
+    ]
+  },
+  "carrier-furnace-code-22": {
+    "count": 1,
+    "last": "2026-09-13",
+    "reasons": [
+      "The cause ranking is wrong for this specific code and would send homeowners and techs down the wrong path. On Carrier/Bryant LED-status boards, Status Code 22 is specifically 'abnormal flame-proving s",
+      "The page instructs the homeowner to clean the flame sensor with emery cloth as a DIY action. The flame rod sits inside the burner/combustion cell area — that is inside the burner compartment and outsi",
+      "Missing shutdown guidance for a code that means flame is being sensed when it should not be. If the board is truly reporting flame with the gas valve commanded off, the correct first instruction is to",
+      "The definition is softened with an invented second half: 'the flame-sensing circuit is reporting a condition that doesn't match the current stage of the ignition sequence.' Carrier's published legend "
+    ]
+  },
+  "carrier-furnace-code-23": {
+    "count": 1,
+    "last": "2026-09-13",
+    "reasons": [
+      "Wrong meaning assigned. On Carrier's (and Bryant/Payne's) two-digit status-code scheme, Status Code 23 is 'Pressure switch did not open' — i.e., the pressure switch was sensed closed when it should ha",
+      "'Carrier 4-flash blink-code furnaces' is fabricated and internally contradictory. Carrier two-digit status codes are displayed as short-flash/long-flash or as a numeric LED pair (2 flashes, pause, 3 f",
+      "The entire cause ranking is invalid because it is derived from the wrong code meaning. For an actual Code 23 (pressure switch failed to open), a defensible ranking starts with a pressure switch stuck ",
+      "Both FAQs restate the incorrect meaning. The '2-flash-then-3-flash pattern points to limit or airflow faults' answer is factually wrong, and 'It's not an emergency... risks cracking the heat exchanger",
+      "The 'safe checks' are keyed to a nonexistent airflow fault, so they will not clear a real Code 23 and will encourage a homeowner to reset and retry a furnace whose combustion-air safety switch is not ",
+      "Costs are priced for the wrong repair set and the frontmatter contradicts the body: costRange caps at '$600 if the blower motor or control board fails' while the body lists ECM motor/module at $500–$9",
+      "Link descriptions are partly fabricated or empty filler: 'Code 22 — related fault code on the same diagnostic scheme' says nothing (22 is an abnormal flame-proving signal), and Code 33 is described as"
+    ]
+  },
+  "carrier-furnace-code-24": {
+    "count": 1,
+    "last": "2026-09-13",
+    "reasons": [
+      "The \"safe for any homeowner\" list crosses the safe-check boundary. It directs the reader to open the furnace cabinet, inspect and handle low-voltage field wiring at the board/terminal strip, look for "
+    ]
+  },
+  "carrier-furnace-code-32": {
+    "count": 1,
+    "last": "2026-09-13",
+    "reasons": [
+      "Wrong meaning assigned to the code. On Carrier (and Bryant) furnaces with two-digit LED status codes, Code 32 is 'Low-heat pressure switch did not close or reopened' — a switch that failed to CLOSE (o",
+      "Because the code meaning is wrong, the entire cause ranking is indefensible. For a genuine Carrier Code 32 (low-heat pressure switch did not close), the realistic ordering is: blocked/plugged vent or ",
+      "Both answers restate the incorrect meaning. Code 32 is not a pre-purge 'switch found closed at rest' check; it is logged after the inducer starts and the low-heat pressure switch fails to prove draft ",
+      "The applies-to statement acknowledges that flash patterns vary but does not disclose the one distinction that actually matters here: on two-stage/variable-speed 58- and 59-series boards Code 32 refers",
+      "The diagnostic sequence is built on the wrong fault. Steps 2 and 4 ('switch should read open with inducer off — a closed reading confirms a stuck switch', 'verify normally-open configuration') describ"
+    ]
+  },
+  "carrier-furnace-code-42": {
+    "count": 1,
+    "last": "2026-09-13",
+    "reasons": [
+      "Code meaning is not verifiable and most likely wrong. In Carrier (and Bryant) status-code tables, the documented blower-motor entry is Code 41 (\"Blower motor fault\") — plus Code 15 (\"Blower motor lock",
+      "The hedge (\"exact wording varies by board revision... confirm against the label\") is used to cover a guess rather than to describe genuine documented variation. The checklist allows saying the meaning",
+      "Cause list is not defensible for an ECM code page. Item 7, \"Capacitor issue (on some motor types) affecting startup and speed,\" is incorrect for ECM/variable-speed motors — they do not use run/start c"
+    ]
+  },
+  "carrier-furnace-code-43": {
+    "count": 1,
+    "last": "2026-09-13",
+    "reasons": [
+      "Inducer motor pricing is unrealistically low for 2026 US pricing. The page lists 'Inducer motor replacement: $300 – $600+' and the frontmatter caps the whole range at '$450 if the pressure switch or i"
+    ]
+  },
+  "carrier-furnace-code-44": {
+    "count": 1,
+    "last": "2026-09-13",
+    "reasons": [
+      "Carrier/Bryant two-digit LED status codes do not include a '44 = gas valve current fault.' The documented Carrier 4x family covers items such as 41 (blower motor fault), 43 (low pressure switch fault)",
+      "Fabricated mechanism: 'the control board is detecting that the current going to (or coming from) the gas valve is outside the expected range,' and the causal story of a 'current-sensing circuit' and '",
+      "Invented model-specific parts. 'Furnace gas valve (36J series) / White Rodgers 36J' pins a specific valve family to an undefined set of furnaces; Carrier 58/59-series units ship with several different",
+      "Cost figures are below plausible 2026 US ranges. Control board replacement is quoted at $250–$600 installed; realistic is roughly $400–$1,200. Gas valve replacement at $200–$450 installed is low for a",
+      "The ranking cannot be defended because the underlying code meaning is invented. If 44 is not a gas-valve code on the reader's board, 'loose or corroded wiring at the gas valve' as the #1 most likely c"
+    ]
+  },
+  "carrier-furnace-code-45": {
+    "count": 1,
+    "last": "2026-09-13",
+    "reasons": [
+      "Carrier/Bryant status code 45 is documented as \"Control circuitry lockout\" on HK42FZ-type boards, and the manufacturer's listed causes are specific: flame-sensing circuit failure, gas valve relay stuc",
+      "Saying \"It is not an immediate safety emergency\" is an unsupported reassurance for a code whose documented causes include a stuck gas valve relay and a failed flame-proving circuit — i.e. conditions d",
+      "The diagnostic sequence omits the two checks that Carrier's own literature points to for Code 45 — verifying the flame-sensing circuit (including flame signal / false flame sense with the valve de-ene"
     ]
   }
 }
