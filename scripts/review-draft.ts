@@ -32,6 +32,8 @@ import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod';
 import yaml from 'js-yaml';
 import { validateDraft } from './_draft-schema';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const Verdict = z.object({
   verdict: z.enum(['pass', 'fail']),
@@ -70,6 +72,24 @@ const files = process.argv.slice(2).filter((a, i, all) => !a.startsWith('--') &&
 const model = process.env.REVIEW_MODEL ?? 'claude-opus-5';
 const reviseModel = process.env.REVISE_MODEL ?? 'claude-opus-5';
 
+// Manufacturer-documented meanings from the backlog, keyed by slug, so the
+// reviewer checks the page against the same reference the generator was given.
+const MEANINGS = new Map<string, string>();
+try {
+  const root = join(dirname(fileURLToPath(import.meta.url)), '..');
+  const backlog = JSON.parse(readFileSync(join(root, 'content-backlog.json'), 'utf-8')) as {
+    brand?: string; equipment?: string; code?: string; meaning?: string;
+  }[];
+  for (const e of backlog) {
+    if (e.brand && e.equipment && e.code && e.meaning) {
+      const slug = `${e.brand}-${e.equipment}-${e.code}`.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80);
+      MEANINGS.set(slug, e.meaning);
+    }
+  }
+} catch {
+  /* no backlog — review without a reference */
+}
+
 const SYSTEM = `You are the senior technical editor for fixme.vip, a US HVAC error-code knowledge base for homeowners. Pages are monetized through repair-lead networks that audit content quality, and ranked by Google, which penalizes thin or fabricated AI content. A page that misleads a homeowner about a gas appliance can hurt someone. Review strictly. When in doubt about a factual claim, FAIL the page and say why.
 
 Apply this checklist. Any failed item is a "block" issue and fails the page:
@@ -102,7 +122,7 @@ function route(pageSeverity: string, v: VerdictT): ReviewResult['route'] {
   return 'publish';
 }
 
-async function review(client: Anthropic | null, md: string, fm: Record<string, unknown>, pageSeverity: string): Promise<VerdictT> {
+async function review(client: Anthropic | null, md: string, fm: Record<string, unknown>, pageSeverity: string, reference?: string): Promise<VerdictT> {
   if (MOCK) {
     return {
       verdict: MOCK === 'fail' ? 'fail' : 'pass',
@@ -118,7 +138,12 @@ async function review(client: Anthropic | null, md: string, fm: Record<string, u
     messages: [
       {
         role: 'user',
-        content: `Review this draft page. Brand: ${String(fm.brand)} · Equipment: ${String(fm.equipment)} · Code: ${String(fm.code)} · Declared severity: ${pageSeverity}\n\n<draft>\n${md}\n</draft>`,
+        content:
+          `Review this draft page. Brand: ${String(fm.brand)} · Equipment: ${String(fm.equipment)} · Code: ${String(fm.code)} · Declared severity: ${pageSeverity}` +
+          (reference
+            ? `\n\nEDITORIAL REFERENCE — the manufacturer-documented meaning this page was commissioned to explain (check the page against it; if you are confident the reference itself is wrong, say so explicitly in an issue):\n${reference}`
+            : '') +
+          `\n\n<draft>\n${md}\n</draft>`,
       },
     ],
     output_config: { format: zodOutputFormat(Verdict) },
@@ -139,8 +164,9 @@ async function review(client: Anthropic | null, md: string, fm: Record<string, u
 }
 
 /** One rewrite from the reviewer's notes. Returns the revised markdown, or null if it isn't schema-valid. */
-async function revise(client: Anthropic, md: string, v: VerdictT): Promise<string | null> {
+async function revise(client: Anthropic, md: string, v: VerdictT, reference?: string): Promise<string | null> {
   const notes = v.issues.map((i) => `- [${i.severity}] ${i.section}: ${i.text}`).join('\n');
+  const refBlock = reference ? `\nMANUFACTURER-DOCUMENTED MEANING OF THIS CODE (authoritative):\n${reference}\n` : '';
   const response = await client.messages.create({
     model: reviseModel,
     max_tokens: 16000,
@@ -151,6 +177,7 @@ async function revise(client: Anthropic, md: string, v: VerdictT): Promise<strin
 
 ${notes}
 
+${refBlock}
 Rewrite the COMPLETE page — frontmatter and body — fixing every issue above, blocking and minor. Keep everything the editor did not object to. Do not add new claims, part numbers, or model-specific specs. Homeowner actions stay within: thermostat settings and batteries, air filter, breaker reset, one reset of a locked-out unit, visible vents, condensate line, exterior panels; everything inside the cabinet is technician work. The frontmatter must keep the same schema and the same brand, equipment, code and severity values; wrap title, code, description, costRange and appliesTo in double quotes; valid YAML. Output only the markdown file — no preamble, no code fence.
 
 <draft>
@@ -175,14 +202,15 @@ async function reviewOne(client: Anthropic | null, file: string): Promise<Review
   const slug = basename(file).replace(/\.md$/, '');
   const pageSeverity = String(fm.severity ?? 'pro');
 
-  let v = await review(client, md, fm, pageSeverity);
+  const reference = MEANINGS.get(slug);
+  let v = await review(client, md, fm, pageSeverity, reference);
   let revised = false;
 
   if (v.verdict === 'fail' && REVISE && client && v.code_exists_for_brand !== 'no') {
     console.log(`   ↻ ${slug}: failed review — revising once from the editor's notes`);
-    const next = await revise(client, md, v);
+    const next = await revise(client, md, v, reference);
     if (next) {
-      const v2 = await review(client, next, frontmatter(next), pageSeverity);
+      const v2 = await review(client, next, frontmatter(next), pageSeverity, reference);
       if (v2.verdict === 'pass') {
         writeFileSync(file, next.endsWith('\n') ? next : next + '\n');
         revised = true;

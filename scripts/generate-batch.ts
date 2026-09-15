@@ -27,6 +27,7 @@ interface BacklogItem {
   equipment?: string;
   code?: string;
   severity?: string;
+  meaning?: string; // manufacturer-documented meaning — the generator builds on this instead of guessing
   _comment?: string;
 }
 
@@ -70,6 +71,7 @@ interface PendingItem {
   equipment: string;
   code: string;
   severity: string;
+  meaning?: string;
   slug: string;
 }
 
@@ -78,7 +80,7 @@ const pending: PendingItem[] = [];
 for (const item of backlog) {
   const slug = slugify(item.brand!, item.equipment!, item.code!);
   if (covered.has(slug) || parked.has(slug)) continue;
-  pending.push({ brand: item.brand!, equipment: item.equipment!, code: item.code!, severity: item.severity!, slug });
+  pending.push({ brand: item.brand!, equipment: item.equipment!, code: item.code!, severity: item.severity!, meaning: item.meaning, slug });
   if (pending.length >= COUNT) break;
 }
 
@@ -89,7 +91,7 @@ if (pending.length === 0) {
 
 if (parked.size) console.log(`${parked.size} backlog entr${parked.size === 1 ? 'y' : 'ies'} parked after ${MAX_REJECTIONS} failed reviews (see content-rejected.json).`);
 console.log(`Selected ${pending.length} of ${backlog.length} backlog entries (COUNT=${COUNT}):`);
-for (const p of pending) console.log(`  - ${p.slug}  [${p.severity}]`);
+for (const p of pending) console.log(`  - ${p.slug}  [${p.severity}]${p.meaning ? '  (meaning supplied)' : ''}`);
 
 if (DRY) {
   console.log('\n--dry-run: no API calls, no files written.');
@@ -126,12 +128,18 @@ function coveredForBrand(brand: string): string[] {
   return out;
 }
 
-function buildPrompt(item: { brand: string; equipment: string; code: string; severity: string }): string {
+function buildPrompt(item: { brand: string; equipment: string; code: string; severity: string; meaning?: string }): string {
   const covered = coveredForBrand(item.brand);
   const dedupBlock = covered.length
     ? `\nALREADY PUBLISHED for ${item.brand} (do NOT duplicate these; if your topic substantially overlaps one, cover only what's genuinely distinct, and reference the related ones by name in "Related codes"):\n${covered.map((c) => `- ${c}`).join('\n')}\n`
     : '';
-  return buildPromptBody(item, dedupBlock);
+  // The single biggest cause of rejected drafts was the model guessing what a
+  // code means. When the backlog carries the manufacturer's documented meaning,
+  // the page is built on it and must not substitute another interpretation.
+  const meaningBlock = item.meaning
+    ? `\nMANUFACTURER-DOCUMENTED MEANING OF THIS CODE (authoritative — build the whole page on this; do not substitute a different meaning; if legends vary by board, say so in appliesTo but keep this as the primary meaning):\n${item.meaning}\n`
+    : '';
+  return buildPromptBody(item, dedupBlock + meaningBlock);
 }
 
 function buildPromptBody(item: { brand: string; equipment: string; code: string; severity: string }, dedupBlock: string): string {
