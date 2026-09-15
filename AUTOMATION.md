@@ -13,6 +13,7 @@
           ──▶ generate-batch.ts     从 content-backlog.json 取 COUNT 个未覆盖的码生成草稿
           ──▶ review-draft.ts       AI 二审：按 README 质量清单逐条检查（码是否真实存在、
                                     有无编造规格、安全边界、紧急页处理、价格合理性、无假署名、不薄）
+                                    不过的页按审稿意见重写一次、再审一次；仍不过才打回
           ──▶ 分流：
                 通过 + diy/pro     ──▶ 直接提交到 main → 自动部署上线
                 通过 + emergency   ──▶ 进滚动 PR「content/needs-review」等你合并
@@ -87,6 +88,8 @@ ADMIN_TOKEN=... npm run queue-sync                # 写入 backlog 顶部
 npm run queue-sync -- --from saved.json --dry-run # 离线:喂一份保存下来的 /api/queue 响应
 npm run queue-sync -- --min-count 2               # 只收被搜过 ≥2 次的
 ```
+
+**`meaning` 字段（关键）**:故障码条目带 `"meaning"`,是厂商码表里该码的官方含义。生成器把它当作页面的基准,审稿器也拿它当参照。第一批运行时 15 篇打回 14 篇,几乎全是生成模型猜错码义;加了这个字段之后码义不再靠猜。新增故障码条目时**务必**从安装手册抄一句含义进去,没把握的宁可不加。
 
 解析规则:品牌必须是站内 10 个品牌之一,设备必须能认出(furnace / AC / heat pump / mini split / thermostat),码取「code 33 / 4 flashes / E5」这类,认不出码就退化成症状(Not cooling / Gas smell / Short cycling…)。**认不出品牌或设备的不猜**,脚本会单独列出「needs a human」让你手动决定(大多是垃圾或站外品牌,如 Daikin)。已发布或已在 backlog 里的只显示搜索次数、不重复加。
 

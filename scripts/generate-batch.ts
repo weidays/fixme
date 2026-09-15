@@ -20,48 +20,14 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import yaml from 'js-yaml';
 
-const BRANDS = ['carrier', 'goodman', 'trane', 'lennox', 'york', 'rheem', 'bryant', 'amana', 'honeywell', 'american-standard'];
-const EQUIPMENT = ['furnace', 'air-conditioner', 'heat-pump', 'mini-split', 'thermostat'];
-const SEVERITIES = ['diy', 'pro', 'emergency'];
-
-/**
- * Validate a generated draft against the content schema BEFORE writing it, so
- * one malformed AI response can't fail the whole batch's build step. Returns an
- * error reason, or null if the draft is valid. Mirrors src/content.config.ts.
- */
-function validateDraft(md: string): string | null {
-  const m = md.match(/^---\n([\s\S]*?)\n---/);
-  if (!m) return 'no frontmatter block';
-  let fm: unknown;
-  try {
-    fm = yaml.load(m[1]);
-  } catch (e) {
-    return 'YAML parse error: ' + String((e as Error).message).split('\n')[0];
-  }
-  if (!fm || typeof fm !== 'object') return 'frontmatter is not an object';
-  const f = fm as Record<string, unknown>;
-  if (typeof f.title !== 'string' || f.title.length > 60) return 'title missing or >60 chars';
-  if (typeof f.description !== 'string' || f.description.length < 50 || f.description.length > 160) return 'description not 50-160 chars';
-  if (typeof f.code !== 'string' || f.code.length < 2) return 'code missing';
-  if (!BRANDS.includes(f.brand as string)) return `brand invalid: ${String(f.brand)}`;
-  if (!EQUIPMENT.includes(f.equipment as string)) return `equipment invalid: ${String(f.equipment)}`;
-  if (!SEVERITIES.includes(f.severity as string)) return `severity invalid: ${String(f.severity)}`;
-  if (typeof f.costRange !== 'string' || f.costRange.length < 3) return 'costRange missing';
-  if (typeof f.appliesTo !== 'string' || f.appliesTo.length < 10) return 'appliesTo too short';
-  if (!Array.isArray(f.tags) || f.tags.length < 1) return 'tags missing';
-  if (!Array.isArray(f.faq) || f.faq.length < 3) return 'faq needs >=3 items';
-  for (const item of f.faq) {
-    const q = item as { q?: unknown; a?: unknown };
-    if (typeof q?.q !== 'string' || typeof q?.a !== 'string' || q.a.length < 40) return 'faq item invalid (answer >=40 chars)';
-  }
-  return null;
-}
+import { validateDraft } from './_draft-schema';
 
 interface BacklogItem {
   brand?: string;
   equipment?: string;
   code?: string;
   severity?: string;
+  meaning?: string; // manufacturer-documented meaning — the generator builds on this instead of guessing
   _comment?: string;
 }
 
@@ -105,6 +71,7 @@ interface PendingItem {
   equipment: string;
   code: string;
   severity: string;
+  meaning?: string;
   slug: string;
 }
 
@@ -113,7 +80,7 @@ const pending: PendingItem[] = [];
 for (const item of backlog) {
   const slug = slugify(item.brand!, item.equipment!, item.code!);
   if (covered.has(slug) || parked.has(slug)) continue;
-  pending.push({ brand: item.brand!, equipment: item.equipment!, code: item.code!, severity: item.severity!, slug });
+  pending.push({ brand: item.brand!, equipment: item.equipment!, code: item.code!, severity: item.severity!, meaning: item.meaning, slug });
   if (pending.length >= COUNT) break;
 }
 
@@ -124,7 +91,7 @@ if (pending.length === 0) {
 
 if (parked.size) console.log(`${parked.size} backlog entr${parked.size === 1 ? 'y' : 'ies'} parked after ${MAX_REJECTIONS} failed reviews (see content-rejected.json).`);
 console.log(`Selected ${pending.length} of ${backlog.length} backlog entries (COUNT=${COUNT}):`);
-for (const p of pending) console.log(`  - ${p.slug}  [${p.severity}]`);
+for (const p of pending) console.log(`  - ${p.slug}  [${p.severity}]${p.meaning ? '  (meaning supplied)' : ''}`);
 
 if (DRY) {
   console.log('\n--dry-run: no API calls, no files written.');
@@ -161,12 +128,18 @@ function coveredForBrand(brand: string): string[] {
   return out;
 }
 
-function buildPrompt(item: { brand: string; equipment: string; code: string; severity: string }): string {
+function buildPrompt(item: { brand: string; equipment: string; code: string; severity: string; meaning?: string }): string {
   const covered = coveredForBrand(item.brand);
   const dedupBlock = covered.length
     ? `\nALREADY PUBLISHED for ${item.brand} (do NOT duplicate these; if your topic substantially overlaps one, cover only what's genuinely distinct, and reference the related ones by name in "Related codes"):\n${covered.map((c) => `- ${c}`).join('\n')}\n`
     : '';
-  return buildPromptBody(item, dedupBlock);
+  // The single biggest cause of rejected drafts was the model guessing what a
+  // code means. When the backlog carries the manufacturer's documented meaning,
+  // the page is built on it and must not substitute another interpretation.
+  const meaningBlock = item.meaning
+    ? `\nMANUFACTURER-DOCUMENTED MEANING OF THIS CODE (authoritative — build the whole page on this; do not substitute a different meaning; if legends vary by board, say so in appliesTo but keep this as the primary meaning):\n${item.meaning}\n`
+    : '';
+  return buildPromptBody(item, dedupBlock + meaningBlock);
 }
 
 function buildPromptBody(item: { brand: string; equipment: string; code: string; severity: string }, dedupBlock: string): string {
@@ -201,7 +174,9 @@ Body structure, exactly these sections:
 
 CRITICAL YAML SYNTAX (or the build rejects the page): wrap the values of title, code, description, costRange and appliesTo in double quotes — they contain colons, dashes, commas or "$" that break unquoted YAML. Do not use unescaped double quotes inside a quoted value. The frontmatter must be valid YAML.
 
-ACCURACY RULES: Only state what is well-documented for this brand. Where behavior varies by model/board, SAY SO explicitly rather than guessing. Never instruct bypassing safety switches, opening gas valves, handling refrigerant, or repeated resets of locked-out units. If severity is emergency (e.g. gas smell), the FIRST guidance must be to shut down, ventilate, and call the gas utility's emergency line / 911 — not DIY.`;
+ACCURACY RULES: Only state what is well-documented for this brand. Every listed cause must be a documented trigger for THIS code on THIS brand — do not import causes from neighbouring codes (e.g. gas-supply problems belong to ignition/flame-proving codes, not to control-circuit lockouts). Rank causes in the manufacturer's own troubleshooting order where one exists. Where behavior varies by model/board, SAY SO explicitly rather than guessing. State whether the code auto-resets or holds until power is cycled, if documented.
+
+DIY BOUNDARY (a senior editor rejects pages that cross it): homeowner actions are limited to thermostat settings and batteries, air filter, breaker or switch reset, ONE reset of a locked-out unit, visible vents/registers, condensate line, and seating exterior panels. Anything inside the cabinet is technician work: fuses, door switches, wiring, sensors, igniters, capacitors, multimeter tests, cleaning flame sensors or burners. Put those only in the technician column, and list in "parts" only items a homeowner may buy and install themselves (filters, thermostat batteries, a thermostat) — or leave parts empty. Never instruct bypassing safety switches, opening gas valves, handling refrigerant, or repeated resets of locked-out units. If severity is emergency (e.g. gas smell), the FIRST guidance must be to shut down, ventilate, and call the gas utility's emergency line / 911 — not DIY.`;
 }
 
 async function generateOne(item: { brand: string; equipment: string; code: string; severity: string }): Promise<string | null> {
