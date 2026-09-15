@@ -1,1 +1,9 @@
-{}
+{
+  "bryant-furnace-code-41": {
+    "count": 1,
+    "last": "2026-09-15",
+    "reasons": [
+      "Fabricated/incorrect model-specific hardware detail: the page twice identifies \"the 5-pin control plug\" at the ECM motor. On the Genteq/GE ECM 2.3 and 2.5 motors used in Carrier/Bryant variable-speed "
+    ]
+  }
+}
