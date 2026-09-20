@@ -5,5 +5,14 @@
     "reasons": [
       "Fabricated/incorrect model-specific hardware detail: the page twice identifies \"the 5-pin control plug\" at the ECM motor. On the Genteq/GE ECM 2.3 and 2.5 motors used in Carrier/Bryant variable-speed "
     ]
+  },
+  "trane-furnace-2-flashes": {
+    "count": 1,
+    "last": "2026-09-20",
+    "reasons": [
+      "The core meaning is very likely wrong for Trane/American Standard. On the widely published Trane/American Standard integrated furnace control (IFC) status-LED legend used across XR/XV 80 and 90-series",
+      "Because the code meaning is unverified/likely wrong, the cause ranking is also unsafe to publish. If 2 flashes is in fact 'pressure switch stuck closed,' the most likely causes are a shorted/stuck pre",
+      "'This lockout auto-resets after about one hour' is asserted three times (body, safe checks, FAQ) as a flat fact for '2 flashes.' The one-hour auto-reset is documented behavior for the Trane ignition-l"
+    ]
   }
 }
