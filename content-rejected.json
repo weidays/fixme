@@ -14,5 +14,13 @@
       "Because the code meaning is unverified/likely wrong, the cause ranking is also unsafe to publish. If 2 flashes is in fact 'pressure switch stuck closed,' the most likely causes are a shorted/stuck pre",
       "'This lockout auto-resets after about one hour' is asserted three times (body, safe checks, FAQ) as a flat fact for '2 flashes.' The one-hour auto-reset is documented behavior for the Trane ignition-l"
     ]
+  },
+  "american-standard-furnace-8-flashes": {
+    "count": 1,
+    "last": "2026-09-21",
+    "reasons": [
+      "The headline cost range is internally contradictory and misleading. Frontmatter says \"$0 DIY – $250 if the flame sensor is replaced\" and the meta description repeats \"from $0 DIY to $250,\" but the bod",
+      "Integrated furnace control board replacement quoted at $350–$650 is below plausible 2026 US pricing (realistic band is roughly $400–$1,200 parts + labor; American Standard/Trane IFCs are frequently $5"
+    ]
   }
 }
