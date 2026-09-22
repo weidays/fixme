@@ -22,5 +22,41 @@
       "The headline cost range is internally contradictory and misleading. Frontmatter says \"$0 DIY – $250 if the flame sensor is replaced\" and the meta description repeats \"from $0 DIY to $250,\" but the bod",
       "Integrated furnace control board replacement quoted at $350–$650 is below plausible 2026 US pricing (realistic band is roughly $400–$1,200 parts + labor; American Standard/Trane IFCs are frequently $5"
     ]
+  },
+  "lennox-furnace-code-e125": {
+    "count": 1,
+    "last": "2026-09-22",
+    "reasons": [
+      "The related-code list assigns specific meanings that do not match Lennox's published alert-code table as I know it. In particular, 'E113 — High line voltage' appears wrong: in Lennox iComfort/communic",
+      "'Lennox Furnace Code 200 — Limit circuit fault / limit switch open' mixes a bare numeric code into an E-prefixed communicating-control list without explaining where that number comes from (non-communi",
+      "Step 1 tells the reader that a power problem triggering the board is 'related to codes like E110, E113, and E115' — this repeats the unverified code meanings above and gives homeowners a specific-soun"
+    ]
+  },
+  "lennox-furnace-code-e200": {
+    "count": 1,
+    "last": "2026-09-22",
+    "reasons": [
+      "This page is about flame rollout — a fire and CO hazard — yet the first guidance a reader gets is a definition, followed by a 'Safe checks before you call anyone' list and an invitation to 'cycle powe",
+      "costRange reads '$0 DIY reset – $600+ if a cracked heat exchanger is found.' Both ends are wrong and unsafe. (a) '$0 DIY reset' contradicts the page's own (correct) statement that pressing the manual ",
+      "'$300 – $650' is implausibly low for 2026 US inducer motor replacement including parts and labor; realistic range is roughly $400–$1,200, and OEM Lennox inducer assemblies on variable-speed models rou",
+      "The page asserts a separate 'Code 200 (ignition lockout)' as a distinct Lennox fault, while the appliesTo block simultaneously says the same fault 'may read as E200 or 200 depending on board firmware."
+    ]
+  },
+  "lennox-furnace-code-e206": {
+    "count": 1,
+    "last": "2026-09-22",
+    "reasons": [
+      "The answer states \"Often yes, but only on low fire… the furnace may run underpowered and struggle to keep up on cold days until repaired.\" This is an undocumented behavioral claim and it is the wrong ",
+      "\"On most Lennox boards this fault holds until you cycle power\" is an invented specificity about control behavior across an unstated set of boards. The page correctly says elsewhere that legends and be",
+      "The page twice asserts a specific control mechanism — that the board reads back relay state and that an open/shorted second-stage solenoid \"trips the board's relay-feedback check.\" Lennox does not pub"
+    ]
+  },
+  "lennox-furnace-code-e209": {
+    "count": 1,
+    "last": "2026-09-22",
+    "reasons": [
+      "The related-code list assigns definite meanings to four other Lennox codes (E208 = 'Pressure Switch Open', Code 200 = 'Ignition Lockout', E125 = 'Control Board Failure', E207 = 'Hot Surface Igniter') ",
+      "Inducer (draft) motor replacement at '$300 – $600' is below realistic 2026 US pricing for a two-stage/modulating Lennox inducer assembly (roughly $400–$1,200 installed; OEM assemblies for SLP/EL96 var"
+    ]
   }
 }
