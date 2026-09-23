@@ -1,14 +1,13 @@
 // Admin read endpoint for captured leads. Auth: Authorization: Bearer <ADMIN_TOKEN>.
-import { json, type Env } from './_utils';
+import { json, requireAdmin, type Env } from './_utils';
 
 export async function onRequestGet(context: {
   request: Request;
   env: Env;
 }): Promise<Response> {
   const { request, env } = context;
-  if (!env.ADMIN_TOKEN) return json({ error: 'ADMIN_TOKEN is not configured on the server.' }, 503);
-  const auth = request.headers.get('authorization') ?? '';
-  if (auth !== `Bearer ${env.ADMIN_TOKEN}`) return json({ error: 'Unauthorized.' }, 401);
+  const denied = requireAdmin(request, env);
+  if (denied) return denied;
 
   // Lead keys are ISO-timestamped → lexicographic order == chronological.
   const SCAN_CAP = 2000;

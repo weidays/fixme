@@ -1,19 +1,14 @@
 // Layer 3 (read side) — the topic queue, for scripts/queue-to-draft.ts.
 // Auth: Authorization: Bearer <ADMIN_TOKEN>.
-import { json, type Env, type QueueEntry } from './_utils';
+import { json, requireAdmin, type Env, type QueueEntry } from './_utils';
 
 export async function onRequestGet(context: {
   request: Request;
   env: Env;
 }): Promise<Response> {
   const { request, env } = context;
-  if (!env.ADMIN_TOKEN) {
-    return json({ error: 'ADMIN_TOKEN is not configured on the server.' }, 503);
-  }
-  const auth = request.headers.get('authorization') ?? '';
-  if (auth !== `Bearer ${env.ADMIN_TOKEN}`) {
-    return json({ error: 'Unauthorized.' }, 401);
-  }
+  const denied = requireAdmin(request, env);
+  if (denied) return denied;
 
   // Two-pass to stay under the Workers subrequest limit and avoid a
   // get-per-key DoS: (1) list keys with their `count` metadata, sort by demand,

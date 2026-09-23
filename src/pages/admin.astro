@@ -1,0 +1,381 @@
+---
+// Operator back office. Static shell; every byte of data comes from
+// /api/admin/* and /api/queue with the ADMIN_TOKEN bearer, which is kept in
+// sessionStorage only. noindex + robots Disallow + excluded from the sitemap.
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Admin — fixme.vip" description="fixme.vip operator back office for leads, lead channels and search demand." noindex>
+  <section id="login" class="admin-login">
+    <h1>Admin</h1>
+    <form id="login-form">
+      <label>Admin token<input id="token" type="password" autocomplete="current-password" required /></label>
+      <button class="btn" type="submit">Sign in</button>
+      <p id="login-error" class="admin-error hidden"></p>
+    </form>
+  </section>
+
+  <section id="app" class="hidden">
+    <nav class="admin-tabs" role="tablist">
+      <button data-tab="overview" class="active">Overview</button>
+      <button data-tab="leads">Leads</button>
+      <button data-tab="channels">Channels</button>
+      <button data-tab="demand">Search demand</button>
+      <button id="logout" class="admin-logout">Sign out</button>
+    </nav>
+
+    <div data-panel="overview">
+      <div id="alerts"></div>
+      <div class="admin-cards" id="cards"></div>
+      <h2>Last 14 days</h2>
+      <div class="admin-scroll"><table id="daily"></table></div>
+      <h2>Pages driving action</h2>
+      <p class="admin-help">All-time CTA clicks and leads per error page. The pages at the top are where to add depth, internal links and a call number first.</p>
+      <div class="admin-scroll"><table id="sources"></table></div>
+    </div>
+
+    <div data-panel="leads" class="hidden">
+      <div class="admin-toolbar">
+        <label>Status
+          <select id="lead-filter">
+            <option value="">All</option>
+            <option value="new">New</option>
+            <option value="contacted">Contacted</option>
+            <option value="handed_off">Handed off</option>
+            <option value="sold">Sold</option>
+            <option value="dead">Dead</option>
+          </select>
+        </label>
+        <button class="btn btn-outline" id="lead-refresh">Refresh</button>
+        <button class="btn btn-outline" id="lead-csv">Export CSV</button>
+        <span id="lead-counts" class="admin-help"></span>
+      </div>
+      <div class="admin-scroll"><table id="leads"></table></div>
+    </div>
+
+    <div data-panel="channels" class="hidden">
+      <p class="admin-help">Where leads go. Changes take effect within a minute on every page, with no redeploy. Setup guide for each network: <code>LEADS.md</code> in the repository.</p>
+      <form id="channels-form" class="admin-form">
+        <fieldset>
+          <legend>Pay-per-call</legend>
+          <label>Tracking phone number
+            <input name="phone" placeholder="+1 (855) 555-0100" />
+          </label>
+          <p class="admin-help">From Service Direct, eLocal or another pay-per-call network. Shows a "Call" button on every quote box.</p>
+        </fieldset>
+        <fieldset>
+          <legend>Partner link (pay-per-lead affiliate)</legend>
+          <label>Partner name<input name="partnerName" placeholder="Modernize" /></label>
+          <label>Tracking link template
+            <input name="partnerUrl" placeholder="https://…?zip={zip}&subid={subid}" />
+          </label>
+          <p class="admin-help">Use <code>{'{zip}'}</code>, <code>{'{subid}'}</code> (lead id or page) and <code>{'{src}'}</code> where the network allows sub-IDs, so you can match their report to your leads.</p>
+          <label>Mode
+            <select name="partnerMode">
+              <option value="off">Off — keep leads on our own form</option>
+              <option value="handoff">Handoff — our form first, then a button to the partner</option>
+              <option value="direct">Direct — quote buttons go straight to the partner's form</option>
+            </select>
+          </label>
+          <p class="admin-help" id="partner-preview"></p>
+        </fieldset>
+        <fieldset>
+          <legend>Webhook</legend>
+          <label>Webhook URL<input name="webhookUrl" placeholder="https://hooks.zapier.com/…" /></label>
+          <label>Signing secret<input name="webhookSecret" placeholder="optional" autocomplete="off" /></label>
+          <p class="admin-help">Every new lead is POSTed here as JSON, signed in the <code>X-Fixme-Signature</code> header. Point it at Zapier or Make to push leads into Google Sheets, a CRM, or a network's posting API.</p>
+          <button type="button" class="btn btn-outline" id="test-webhook">Send test lead</button>
+          <span id="webhook-result" class="admin-help"></span>
+        </fieldset>
+        <fieldset>
+          <legend>Email</legend>
+          <label class="admin-check"><input type="checkbox" name="autoReply" /> Send the homeowner a confirmation email when they leave an email address</label>
+          <p class="admin-help" id="email-status"></p>
+        </fieldset>
+        <button class="btn" type="submit">Save channels</button>
+        <span id="channels-result" class="admin-help"></span>
+      </form>
+    </div>
+
+    <div data-panel="demand" class="hidden">
+      <h2>Searches with no matching page</h2>
+      <p class="admin-help">What visitors typed into the code lookup. The daily pipeline already moves recognisable ones to the top of the backlog.</p>
+      <div class="admin-scroll"><table id="queue"></table></div>
+      <h2>Dead legacy URLs</h2>
+      <p class="admin-help">Old paths real visitors hit. Paste the lines worth keeping into <code>public/_redirects</code>.</p>
+      <pre id="redirects" class="admin-pre"></pre>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .admin-login { max-width: 360px; }
+  .admin-login label, .admin-form label { display: block; margin: 0.6rem 0; font-weight: 600; }
+  .admin-login input, .admin-form input, .admin-form select { display: block; width: 100%; margin-top: 0.25rem; padding: 0.5rem; font: inherit; border: 1px solid var(--border); border-radius: 6px; }
+  .admin-form .admin-check { font-weight: 400; }
+  .admin-form .admin-check input { display: inline; width: auto; margin-right: 0.4rem; }
+  .admin-form fieldset { border: 1px solid var(--border); border-radius: 10px; padding: 0.8rem 1rem; margin: 1rem 0; }
+  .admin-form legend { font-weight: 700; padding: 0 0.3rem; }
+  .admin-error { color: #b42318; }
+  .admin-tabs { display: flex; flex-wrap: wrap; gap: 0.4rem; margin: 1rem 0 1.4rem; border-bottom: 1px solid var(--border); }
+  .admin-tabs button { font: inherit; background: none; border: 0; padding: 0.6rem 0.9rem; cursor: pointer; border-bottom: 2px solid transparent; }
+  .admin-tabs button.active { border-bottom-color: var(--accent); font-weight: 700; }
+  .admin-tabs .admin-logout { margin-left: auto; color: var(--muted, #666); }
+  .admin-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.8rem; }
+  .admin-card { border: 1px solid var(--border); border-radius: 10px; padding: 0.8rem 1rem; }
+  .admin-card b { display: block; font-size: 1.6rem; }
+  .admin-card span { color: var(--muted, #666); font-size: 0.85rem; }
+  .admin-scroll { overflow-x: auto; }
+  .admin-scroll table { border-collapse: collapse; width: 100%; font-size: 0.9rem; }
+  .admin-scroll th, .admin-scroll td { text-align: left; padding: 0.45rem 0.6rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .admin-scroll td.num, .admin-scroll th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .admin-scroll td.issue { min-width: 260px; max-width: 420px; white-space: pre-wrap; }
+  .admin-scroll select, .admin-scroll input { font: inherit; padding: 0.25rem; border: 1px solid var(--border); border-radius: 6px; }
+  .admin-toolbar { display: flex; flex-wrap: wrap; align-items: end; gap: 0.6rem; margin-bottom: 1rem; }
+  .admin-toolbar select { display: block; font: inherit; padding: 0.4rem; }
+  .admin-help { color: var(--muted, #666); font-size: 0.9rem; }
+  .admin-alert { border: 1px solid #f5c26b; background: #fff8eb; color: #5c3d00; border-radius: 10px; padding: 0.7rem 1rem; margin-bottom: 0.8rem; }
+  .admin-pre { overflow-x: auto; background: #f6f6f6; color: #222; padding: 0.8rem; border-radius: 8px; font-size: 0.85rem; }
+  .badge { display: inline-block; font-size: 0.75rem; padding: 0.05rem 0.4rem; border-radius: 999px; border: 1px solid var(--border); margin: 0 0.2rem 0.2rem 0; }
+</style>
+
+<script>
+  const TOKEN_KEY = 'fixme-admin-token';
+  const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
+  let token = sessionStorage.getItem(TOKEN_KEY) ?? '';
+
+  async function api(path: string, init: RequestInit = {}) {
+    const res = await fetch(path, {
+      ...init,
+      headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json', ...(init.headers ?? {}) },
+    });
+    const body = await res.json().catch(() => ({}));
+    if (res.status === 401) {
+      signOut('Token rejected.');
+      throw new Error('unauthorized');
+    }
+    if (!res.ok) throw new Error(body.error ?? `HTTP ${res.status}`);
+    return body;
+  }
+
+  // DOM helpers — all user-supplied text goes through textContent, never innerHTML.
+  function el(tag: string, props: Record<string, string> = {}, ...kids: (Node | string | null)[]) {
+    const n = document.createElement(tag);
+    for (const [k, v] of Object.entries(props)) {
+      if (k === 'class') n.className = v;
+      else n.setAttribute(k, v);
+    }
+    for (const kid of kids) if (kid !== null) n.append(kid);
+    return n;
+  }
+  function table(target: HTMLElement, head: string[], rows: (Node | string)[][], numCols: number[] = []) {
+    target.replaceChildren(
+      el('thead', {}, el('tr', {}, ...head.map((h, i) => el('th', numCols.includes(i) ? { class: 'num' } : {}, h)))),
+      el('tbody', {}, ...rows.map((r) => el('tr', {}, ...r.map((c, i) => el('td', numCols.includes(i) ? { class: 'num' } : {}, c))))),
+    );
+    if (!rows.length) target.append(el('tbody', {}, el('tr', {}, el('td', { colspan: String(head.length), class: 'admin-help' }, 'Nothing yet.'))));
+  }
+  const fmtDate = (iso: string) => new Date(iso).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+
+  // ---- auth -----------------------------------------------------------------
+  function signOut(msg = '') {
+    token = '';
+    sessionStorage.removeItem(TOKEN_KEY);
+    $('app').classList.add('hidden');
+    $('login').classList.remove('hidden');
+    $('login-error').textContent = msg;
+    $('login-error').classList.toggle('hidden', !msg);
+  }
+  $('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    token = $<HTMLInputElement>('token').value.trim();
+    try {
+      await api('/api/admin/stats');
+      sessionStorage.setItem(TOKEN_KEY, token);
+      start();
+    } catch (err) {
+      if ((err as Error).message !== 'unauthorized') signOut((err as Error).message);
+    }
+  });
+  $('logout').addEventListener('click', () => signOut());
+
+  // ---- tabs -------------------------------------------------------------------
+  const loaders: Record<string, () => Promise<void>> = {};
+  document.querySelectorAll<HTMLButtonElement>('[data-tab]').forEach((b) =>
+    b.addEventListener('click', () => {
+      document.querySelectorAll('[data-tab]').forEach((x) => x.classList.toggle('active', x === b));
+      document.querySelectorAll<HTMLElement>('[data-panel]').forEach((p) => p.classList.toggle('hidden', p.dataset.panel !== b.dataset.tab));
+      loaders[b.dataset.tab!]?.().catch((err) => alert((err as Error).message));
+    }),
+  );
+
+  // ---- overview ---------------------------------------------------------------
+  loaders.overview = async () => {
+    const [stats, ch] = await Promise.all([api('/api/admin/stats'), api('/api/admin/channels')]);
+    const sum = (type: string) => stats.days.reduce((n: number, d: string) => n + (stats.daily[d][type] ?? 0), 0);
+    const cards: [string, number][] = [
+      ['New leads', stats.leads.byStatus.new ?? 0],
+      ['Leads, all time', stats.leads.total],
+      ['Leads, 30 days', sum('lead')],
+      ['Quote clicks, 30 days', sum('quote_click')],
+      ['Call clicks, 30 days', sum('call_click')],
+      ['Partner clicks, 30 days', sum('partner_click')],
+    ];
+    $('cards').replaceChildren(...cards.map(([label, n]) => el('div', { class: 'admin-card' }, el('b', {}, String(n)), el('span', {}, label))));
+
+    const alerts: string[] = [];
+    if (!ch.phone && ch.partnerMode === 'off' && !ch.webhookUrl)
+      alerts.push('No lead channel is configured. Every lead waits for you to act on it by hand. Open Channels to add a call number, a partner link or a webhook.');
+    if (!ch.email.resend || !ch.email.notifyTo) alerts.push('Lead alert email is off (RESEND_API_KEY or LEAD_NOTIFY_EMAIL missing in Cloudflare Pages settings).');
+    if ((stats.leads.byStatus.new ?? 0) > 0) alerts.push(`${stats.leads.byStatus.new} lead(s) marked New. Open Leads to follow up.`);
+    $('alerts').replaceChildren(...alerts.map((a) => el('div', { class: 'admin-alert' }, a)));
+
+    const last = stats.days.slice(-14).reverse();
+    table(
+      $('daily'),
+      ['Day', 'Quote clicks', 'Call clicks', 'Partner clicks', 'Leads'],
+      last.map((d: string) => [d, ...['quote_click', 'call_click', 'partner_click', 'lead'].map((t) => String(stats.daily[d][t] ?? 0))]),
+      [1, 2, 3, 4],
+    );
+    table(
+      $('sources'),
+      ['Page', 'Quote clicks', 'Call clicks', 'Partner clicks', 'Leads'],
+      stats.topSources.map((s: Record<string, number | string>) => [
+        s.src === 'direct' ? 'direct' : el('a', { href: `/error/${s.src}`, target: '_blank', rel: 'noopener' }, String(s.src)),
+        String(s.quote_click ?? 0),
+        String(s.call_click ?? 0),
+        String(s.partner_click ?? 0),
+        String(s.lead ?? 0),
+      ]),
+      [1, 2, 3, 4],
+    );
+  };
+
+  // ---- leads ------------------------------------------------------------------
+  type LeadRow = Record<string, any>;
+  let leadRows: LeadRow[] = [];
+  const STATUSES = ['new', 'contacted', 'handed_off', 'sold', 'dead'];
+
+  async function saveLead(key: string, patch: Record<string, string>, cell: HTMLElement) {
+    cell.style.opacity = '0.5';
+    try {
+      await api('/api/admin/leads', { method: 'POST', body: JSON.stringify({ key, ...patch }) });
+    } catch (err) {
+      alert((err as Error).message);
+    }
+    cell.style.opacity = '';
+  }
+
+  loaders.leads = async () => {
+    const status = $<HTMLSelectElement>('lead-filter').value;
+    const data = await api(`/api/admin/leads${status ? `?status=${status}` : ''}`);
+    leadRows = data.items;
+    $('lead-counts').textContent = STATUSES.map((s) => `${s.replace('_', ' ')}: ${data.counts[s] ?? 0}`).join(' · ');
+    table(
+      $('leads'),
+      ['Received', 'ZIP', 'Name', 'Contact', 'Issue', 'From page', 'Routing', 'Status', 'Note'],
+      leadRows.map((l) => {
+        const contact = String(l.contact);
+        const isEmail = contact.includes('@');
+        const routing: Node[] = [];
+        if (l.routing?.webhook) routing.push(el('span', { class: 'badge' }, `webhook ${l.routing.webhook.status}`));
+        if (l.routing?.partner) routing.push(el('span', { class: 'badge' }, `→ ${l.routing.partner.name || 'partner'}`));
+        if (l.routing?.autoReply) routing.push(el('span', { class: 'badge' }, `confirm ${l.routing.autoReply.status}`));
+        const sel = el('select', {}, ...STATUSES.map((s) => el('option', { value: s }, s.replace('_', ' ')))) as HTMLSelectElement;
+        sel.value = l.status ?? 'new';
+        sel.addEventListener('change', () => saveLead(l.key, { status: sel.value }, sel));
+        const note = el('input', { value: l.note ?? '', placeholder: 'note' }) as HTMLInputElement;
+        note.addEventListener('change', () => saveLead(l.key, { note: note.value }, note));
+        return [
+          fmtDate(l.createdAt),
+          String(l.zip),
+          String(l.name || '—'),
+          el('a', { href: isEmail ? `mailto:${contact}` : `tel:${contact.replace(/[^\d+]/g, '')}` }, contact),
+          el('div', { class: 'issue' }, String(l.issue)),
+          l.source && l.source !== 'direct' ? el('a', { href: `/error/${l.source}`, target: '_blank', rel: 'noopener' }, String(l.source)) : 'direct',
+          el('span', {}, ...routing),
+          sel,
+          note,
+        ];
+      }),
+    );
+    document.querySelectorAll('#leads td:nth-child(5)').forEach((td) => td.classList.add('issue'));
+  };
+  $('lead-filter').addEventListener('change', () => loaders.leads());
+  $('lead-refresh').addEventListener('click', () => loaders.leads());
+  $('lead-csv').addEventListener('click', () => {
+    const cols = ['createdAt', 'zip', 'name', 'contact', 'issue', 'source', 'status', 'note'];
+    const esc = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const csv = [cols.join(','), ...leadRows.map((l) => cols.map((c) => esc(l[c])).join(','))].join('\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+    const a = el('a', { href: url, download: `fixme-leads-${new Date().toISOString().slice(0, 10)}.csv` });
+    document.body.append(a);
+    (a as HTMLAnchorElement).click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  });
+
+  // ---- channels ---------------------------------------------------------------
+  const form = $<HTMLFormElement>('channels-form');
+  function fillChannels(ch: Record<string, any>) {
+    for (const name of ['phone', 'partnerName', 'partnerUrl', 'partnerMode', 'webhookUrl', 'webhookSecret']) {
+      (form.elements.namedItem(name) as HTMLInputElement).value = ch[name] ?? '';
+    }
+    (form.elements.namedItem('autoReply') as HTMLInputElement).checked = Boolean(ch.autoReply);
+    $('partner-preview').textContent = ch.partnerPreview ? `Example link: ${ch.partnerPreview}` : '';
+    $('email-status').textContent =
+      ch.email.resend && ch.email.notifyTo
+        ? `Lead alerts go to ${ch.email.notifyTo}.`
+        : 'Email is not configured: set RESEND_API_KEY and LEAD_NOTIFY_EMAIL in Cloudflare Pages → Settings → Variables.';
+  }
+  loaders.channels = async () => fillChannels(await api('/api/admin/channels'));
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const f = new FormData(form);
+    const payload = Object.fromEntries(f.entries()) as Record<string, unknown>;
+    payload.autoReply = (form.elements.namedItem('autoReply') as HTMLInputElement).checked;
+    $('channels-result').textContent = 'Saving…';
+    try {
+      const res = await api('/api/admin/channels', { method: 'PUT', body: JSON.stringify(payload) });
+      fillChannels(res.channels);
+      $('channels-result').textContent = 'Saved. Live on the site within a minute.';
+    } catch (err) {
+      $('channels-result').textContent = (err as Error).message;
+    }
+  });
+  $('test-webhook').addEventListener('click', async () => {
+    $('webhook-result').textContent = 'Sending…';
+    try {
+      const r = await api('/api/admin/channels', { method: 'POST', body: JSON.stringify({ action: 'test-webhook' }) });
+      $('webhook-result').textContent = r.ok ? `Delivered (HTTP ${r.status}).` : `Failed: ${r.status} ${r.detail ?? ''}`;
+    } catch (err) {
+      $('webhook-result').textContent = (err as Error).message;
+    }
+  });
+
+  // ---- search demand ----------------------------------------------------------
+  loaders.demand = async () => {
+    const q = await api('/api/queue');
+    const items = q.items as { error: string; count: number; lastSeen: string }[];
+    const dead = items.filter((i) => /^404 \//.test(i.error));
+    const searches = items.filter((i) => !/^404 \//.test(i.error));
+    table($('queue'), ['Searched', 'Times', 'Last seen'], searches.map((i) => [i.error, String(i.count), fmtDate(i.lastSeen)]), [1]);
+    $('redirects').textContent = dead.length
+      ? dead
+          .map((d) => {
+            const path = d.error.slice(4);
+            const words = path.replace(/\.(html?|php|aspx?)$/, '').split(/[^a-zA-Z0-9]+/).filter((w) => w.length > 1);
+            return `${path}  /fix?q=${encodeURIComponent(words.join(' '))}  301   # ${d.count} hits`;
+          })
+          .join('\n')
+      : 'No dead-URL hits recorded yet.';
+  };
+
+  // ---- boot -------------------------------------------------------------------
+  function start() {
+    $('login').classList.add('hidden');
+    $('app').classList.remove('hidden');
+    loaders.overview().catch((err) => alert((err as Error).message));
+  }
+  if (token) start();
+</script>

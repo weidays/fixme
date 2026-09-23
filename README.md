@@ -33,6 +33,13 @@
 | `POST /api/report` | 未命中码入选题队列 |
 | `POST /api/diagnose` | AI 诊断（HVAC prompt + 安全边界，IP 日限免） |
 | `GET /api/queue` | 选题队列读取（ADMIN_TOKEN） |
+| `/admin` | 运营后台：lead 管理、渠道配置、漏斗数据、搜索需求（ADMIN_TOKEN 登录） |
+| `GET /api/channels` | 公开：当前电话号码和 partner 模式（页面 CTA 用） |
+| `GET /api/go` | 跳转到后台配置的 partner 链接（带 zip / subid） |
+| `POST /api/event` | CTA 点击计数（报价按钮、电话按钮） |
+| `/api/admin/*` | 后台接口：leads、stats、channels（ADMIN_TOKEN） |
+
+lead 渠道（pay-per-call 号码、affiliate 链接、webhook）的申请和配置见 [LEADS.md](LEADS.md)。
 
 `public/_redirects`：旧域名路径 301 表（Cloudflare Pages 原生支持）。404 页会用旧路径推荐相近码页并把路径记进队列，`npm run queue-sync -- --dry-run` 直接输出可粘贴的 301 行。
 

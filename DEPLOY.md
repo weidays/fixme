@@ -32,7 +32,7 @@ npx wrangler pages deploy dist      # 首次会让你确认创建项目名（建
 | 变量 | 类型 | 作用 | 不配会怎样 |
 |---|---|---|---|
 | `ANTHROPIC_API_KEY` | Secret | /api/diagnose 的 AI 诊断 | 诊断按钮返回「暂未开放」，其余正常 |
-| `ADMIN_TOKEN` | Secret | /api/leads、/api/queue 读取口令（自己生成一串长随机字符串） | 这两个管理端点返回 503 |
+| `ADMIN_TOKEN` | Secret | `/admin` 后台登录口令，也用于 /api/leads、/api/queue（自己生成一串长随机字符串） | 后台和管理端点返回 503 |
 | `RESEND_API_KEY` | Secret | 新 lead 邮件提醒（resend.com 注册拿） | lead 仍存 KV，只是不发邮件 |
 | `LEAD_NOTIFY_EMAIL` | 普通 | lead 提醒发到的邮箱 = `weidays4u@gmail.com` | 同上 |
 | `CLAUDE_MODEL` | 普通（可选） | 默认 claude-opus-4-8，可设 claude-haiku-4-5 降本 | 用默认 |
