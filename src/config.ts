@@ -7,9 +7,8 @@ export const SITE_TAGLINE = 'HVAC error codes, explained and fixed';
 // Rail A — Amazon Associates. Replace after approval; links render with this tag.
 export const AMAZON_TAG = 'fixmevip-20'; // TODO: replace with your real Associates tag
 
-// Rail B — pay-per-call number. Empty string = phone CTA hidden (form-only)
-// until a Service Direct / pay-per-call number is provisioned.
-export const QUOTE_PHONE = '';
+// Rail B — lead channels (pay-per-call number, partner link, webhook) are set
+// at runtime in /admin → Channels, not here. See LEADS.md.
 
 export const BRANDS = [
   'carrier',

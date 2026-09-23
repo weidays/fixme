@@ -1,8 +1,9 @@
 ---
 // Rail B — repair-lead capture. Routes to /quote with source attribution.
-// When QUOTE_PHONE is set (pay-per-call provisioned), a call button renders too.
-import { QUOTE_PHONE } from '../config';
-
+// Channels are read at runtime from /api/channels (set in /admin), so turning
+// on a pay-per-call number or a partner link needs no rebuild:
+//   phone            → a "Call" button appears on every CTA
+//   partner 'direct' → "Get free local quotes" goes straight to the partner via /api/go
 interface Props {
   source: string; // page slug for lead attribution
   heading?: string;
@@ -13,14 +14,57 @@ const { source, heading = 'Get this fixed by a local pro', urgent = false } = As
 const quoteHref = `/quote?from=${encodeURIComponent(source)}`;
 ---
 
-<div class={`quote-cta ${urgent ? 'urgent' : ''}`}>
+<div class={`quote-cta ${urgent ? 'urgent' : ''}`} data-src={source}>
   <p class="quote-heading">{heading}</p>
   <p class="quote-sub">
     Free, no-obligation quotes from licensed HVAC technicians in your area.
     Compare up to 3 estimates before anyone visits.
   </p>
   <p class="quote-actions">
-    <a class="btn" href={quoteHref}>Get free local quotes</a>
-    {QUOTE_PHONE && <a class="btn btn-outline" href={`tel:${QUOTE_PHONE}`}>Call {QUOTE_PHONE}</a>}
+    <a class="btn cta-quote" href={quoteHref}>Get free local quotes</a>
+    <a class="btn btn-outline cta-call hidden" href="#">Call now</a>
   </p>
 </div>
+
+<script>
+  type Channels = { phone: string | null; partner: { mode: string; name: string | null } | null };
+
+  const beacon = (type: string, src: string) => {
+    try {
+      navigator.sendBeacon('/api/event', JSON.stringify({ type, src }));
+    } catch {
+      /* analytics must never break the CTA */
+    }
+  };
+
+  const ctas = document.querySelectorAll<HTMLElement>('.quote-cta');
+  ctas.forEach((cta) => {
+    const src = cta.dataset.src ?? 'direct';
+    cta.querySelector('.cta-quote')?.addEventListener('click', () => beacon('quote_click', src));
+    cta.querySelector('.cta-call')?.addEventListener('click', () => beacon('call_click', src));
+  });
+
+  if (ctas.length) {
+    fetch('/api/channels')
+      .then((r) => (r.ok ? (r.json() as Promise<Channels>) : null))
+      .then((ch) => {
+        if (!ch) return;
+        ctas.forEach((cta) => {
+          const src = cta.dataset.src ?? 'direct';
+          if (ch.phone) {
+            const call = cta.querySelector<HTMLAnchorElement>('.cta-call');
+            if (call) {
+              call.href = `tel:${ch.phone.replace(/[^\d+]/g, '')}`;
+              call.textContent = `Call ${ch.phone}`;
+              call.classList.remove('hidden');
+            }
+          }
+          if (ch.partner?.mode === 'direct') {
+            const quote = cta.querySelector<HTMLAnchorElement>('.cta-quote');
+            if (quote) quote.href = `/api/go?src=${encodeURIComponent(src)}`;
+          }
+        });
+      })
+      .catch(() => {});
+  }
+</script>
