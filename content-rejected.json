@@ -33,13 +33,15 @@
     ]
   },
   "lennox-furnace-code-e200": {
-    "count": 1,
-    "last": "2026-09-22",
+    "count": 2,
+    "last": "2026-09-23",
     "reasons": [
-      "This page is about flame rollout — a fire and CO hazard — yet the first guidance a reader gets is a definition, followed by a 'Safe checks before you call anyone' list and an invitation to 'cycle powe",
-      "costRange reads '$0 DIY reset – $600+ if a cracked heat exchanger is found.' Both ends are wrong and unsafe. (a) '$0 DIY reset' contradicts the page's own (correct) statement that pressing the manual ",
-      "'$300 – $650' is implausibly low for 2026 US inducer motor replacement including parts and labor; realistic range is roughly $400–$1,200, and OEM Lennox inducer assemblies on variable-speed models rou",
-      "The page asserts a separate 'Code 200 (ignition lockout)' as a distinct Lennox fault, while the appliesTo block simultaneously says the same fault 'may read as E200 or 200 depending on board firmware."
+      "This page is about flame rollout, which is an emergency-class condition. The required first guidance (shut the furnace off at the switch, do not restart it, and call a licensed HVAC pro or the gas uti",
+      "The page explicitly instructs the homeowner to 'Perform ONE reset' and repeats 'one reset' twice more in the symptom table, and the FAQ says 'You may perform one reset after the unit cools.' Resetting",
+      "Factual contradiction and a dangerous instruction. A rollout switch is a MANUAL-reset device — cycling power at the breaker or furnace switch does not clear it. The body says the lockout 'holds until ",
+      "The related-code list appears to contain invented or unverified meanings: a separate 'Code 200 (ignition lockout)' alongside E200, plus 'E207 Hot Surface Igniter', 'E208 Pressure Switch Open', 'E210 P",
+      "appliesTo claims coverage of ML195. Merit-series furnaces such as the ML195 use a SureLight-type board with LED flash/blink diagnostics, not alphanumeric E-codes on a 7-segment display, so an 'E200' r",
+      "I cannot confirm the commissioned reference. My recollection of the Lennox unit-control code list is that the E200/E201 range is documented as limit-circuit open (with E201 as limit open longer than ~"
     ]
   },
   "lennox-furnace-code-e206": {
