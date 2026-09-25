@@ -60,5 +60,41 @@
       "The related-code list assigns definite meanings to four other Lennox codes (E208 = 'Pressure Switch Open', Code 200 = 'Ignition Lockout', E125 = 'Control Board Failure', E207 = 'Hot Surface Igniter') ",
       "Inducer (draft) motor replacement at '$300 – $600' is below realistic 2026 US pricing for a two-stage/modulating Lennox inducer assembly (roughly $400–$1,200 installed; OEM assemblies for SLP/EL96 var"
     ]
+  },
+  "carrier-furnace-short-cycling": {
+    "count": 1,
+    "last": "2026-09-25",
+    "reasons": [
+      "\"Control board replacement: $350–$650\" is below a realistic 2026 US range. Carrier control boards (especially Infinity/variable-speed and two-stage boards) commonly run $400–$1,200 installed, with Inf",
+      "costRange (\"$0 DIY (filter) – $650\") and the meta description (\"repair costs $0–$650\") directly contradict the body, which lists blower motor replacement at $400–$1,000+ and heat exchanger at $1,500–$",
+      "The page raises soot smell, flame flicker, and cracked heat exchanger but gives no carbon-monoxide emergency guidance anywhere. For a gas furnace page that names those symptoms, the first instruction "
+    ]
+  },
+  "lennox-furnace-blowing-cold-air": {
+    "count": 1,
+    "last": "2026-09-25",
+    "reasons": [
+      "The page assigns specific meanings to a list of Lennox alert codes that are not reliably documented and in at least one case appear wrong. Lennox SureLight/unit-controller alert code 200 is associated",
+      "E207 (\"Hot Surface Igniter\"), E208 (\"Pressure Switch Open\"), E240 (\"Low Flame Current\"), E241 (\"Flame Sensed Out of Sequence\"), E250 (\"Limit Switch Open\") and E270 (\"Ignition Retry Lockout\") are prese",
+      "The page mixes two different display conventions (\"Code 200\" and \"E207/E240\" style) without explaining that Lennox uses different diagnostic schemes across SureLight boards, M-series boards, and iComf",
+      "Two figures are implausibly low for 2026 US pricing. Inducer motor replacement is listed at $300–$650; realistic installed range is roughly $400–$1,200. Control board replacement is listed at $350–$70"
+    ]
+  },
+  "lennox-furnace-code-e240": {
+    "count": 1,
+    "last": "2026-09-25",
+    "reasons": [
+      "I cannot confirm that Lennox documents E240 as 'low flame current in run mode.' In the Lennox SureLight / Unit Controller alphanumeric legend I know (SLP98UH, EL296, SL280V-class 7-segment boards), th",
+      "The page states flatly that 'The two documented triggers are a dirty or contaminated flame sensor and a weak or unstable flame.' That is presented as manufacturer documentation but is not sourced, and"
+    ]
+  },
+  "rheem-furnace-won-t-ignite": {
+    "count": 1,
+    "last": "2026-09-25",
+    "reasons": [
+      "The answer states \"there's no fire risk from repeated trials.\" That is a false safety reassurance. Repeated failed trials can produce delayed/rough ignition, unburned gas accumulation in the heat exch",
+      "\"Because gas-supply and pressure-switch issues throw their own distinct flash codes on Rheem furnaces, they are not the primary cause of a plain 'won't ignite' lockout\" is factually wrong for gas supp",
+      "Control board replacement is listed at \"$350 – $450+ installed\" and the headline costRange caps the whole page at \"$0 DIY – $450.\" Realistic 2026 US installed pricing for a furnace integrated control "
+    ]
   }
 }
