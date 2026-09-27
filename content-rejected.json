@@ -71,13 +71,12 @@
     ]
   },
   "lennox-furnace-blowing-cold-air": {
-    "count": 1,
-    "last": "2026-09-25",
+    "count": 2,
+    "last": "2026-09-26",
     "reasons": [
-      "The page assigns specific meanings to a list of Lennox alert codes that are not reliably documented and in at least one case appear wrong. Lennox SureLight/unit-controller alert code 200 is associated",
-      "E207 (\"Hot Surface Igniter\"), E208 (\"Pressure Switch Open\"), E240 (\"Low Flame Current\"), E241 (\"Flame Sensed Out of Sequence\"), E250 (\"Limit Switch Open\") and E270 (\"Ignition Retry Lockout\") are prese",
-      "The page mixes two different display conventions (\"Code 200\" and \"E207/E240\" style) without explaining that Lennox uses different diagnostic schemes across SureLight boards, M-series boards, and iComf",
-      "Two figures are implausibly low for 2026 US pricing. Inducer motor replacement is listed at $300–$650; realistic installed range is roughly $400–$1,200. Control board replacement is listed at $350–$70"
+      "Fabricated or unverifiable Lennox diagnostic codes. The page assigns confident, specific meanings to E204, E207, E208, E240, E241, E250, E270 and the ranges 'E204–E206' and 'E208–E211' (gas valve wiri",
+      "'Ignition lockout (Code 200)' is presented as established fact. Lennox 200-series numbering is not documented as a generic 'ignition lockout' across the listed series, and the page cannot guess. Remov",
+      "Applies-to honesty failure by contradiction. The frontmatter correctly says 'exact fault codes and behavior vary by control board,' but the body then quotes precise E-codes as if universal. ML193 and "
     ]
   },
   "lennox-furnace-code-e240": {
