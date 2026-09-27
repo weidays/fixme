@@ -95,5 +95,19 @@
       "\"Because gas-supply and pressure-switch issues throw their own distinct flash codes on Rheem furnaces, they are not the primary cause of a plain 'won't ignite' lockout\" is factually wrong for gas supp",
       "Control board replacement is listed at \"$350 – $450+ installed\" and the headline costRange caps the whole page at \"$0 DIY – $450.\" Realistic 2026 US installed pricing for a furnace integrated control "
     ]
+  },
+  "goodman-furnace-blower-not-running": {
+    "count": 1,
+    "last": "2026-09-27",
+    "reasons": [
+      "Factual error about how the Goodman high-limit behaves, stated three times. The page says a limit trip can \"cut power to the blower\" / \"stop the blower cycle\" and that an open limit can \"interrupt the"
+    ]
+  },
+  "goodman-furnace-flame-sensor-problems": {
+    "count": 1,
+    "last": "2026-09-27",
+    "reasons": [
+      "The declared cost range is wrong and contradicts the page's own body. costRange says \"$0 DIY inspection – $250 if the flame sensor and control board need service\" and the meta description says \"($0-$2"
+    ]
   }
 }
