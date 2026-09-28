@@ -109,5 +109,14 @@
     "reasons": [
       "The declared cost range is wrong and contradicts the page's own body. costRange says \"$0 DIY inspection – $250 if the flame sensor and control board need service\" and the meta description says \"($0-$2"
     ]
+  },
+  "trane-furnace-leaking-water": {
+    "count": 1,
+    "last": "2026-09-28",
+    "reasons": [
+      "The page twice asserts that a backed-up condensate drain shows as a \"3-flash pressure switch code\" on Trane furnaces, stated as a brand-wide fact. Trane/American Standard flash-code maps differ by int",
+      "Cost figures are internally inconsistent and understate the worst case: frontmatter/description cap the range at \"$600\" while the body lists a water-damaged control board at $300–$700+ and a heat exch",
+      "\"$600+ if a heat exchanger is condensing/cracked\" is garbled and technically wrong-sounding: a condensing heat exchanger producing water is normal operation, not a fault. As written it implies normal "
+    ]
   }
 }
