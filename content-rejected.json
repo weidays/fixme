@@ -118,5 +118,19 @@
       "Cost figures are internally inconsistent and understate the worst case: frontmatter/description cap the range at \"$600\" while the body lists a water-damaged control board at $300–$700+ and a heat exch",
       "\"$600+ if a heat exchanger is condensing/cracked\" is garbled and technically wrong-sounding: a condensing heat exchanger producing water is normal operation, not a fault. As written it implies normal "
     ]
+  },
+  "lennox-furnace-won-t-ignite": {
+    "count": 1,
+    "last": "2026-09-29",
+    "reasons": [
+      "The page twice instructs the homeowner to find the model number on \"the rating plate inside the burner compartment door.\" That sends a homeowner into the burner compartment of a gas appliance that is "
+    ]
+  },
+  "trane-furnace-runs-constantly-but-not-enough-heat": {
+    "count": 1,
+    "last": "2026-09-29",
+    "reasons": [
+      "API 400: 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"You have reached your specified API usage limits. You will regain access on 2026-10-01 at 00:00 UTC.\"},\"request_id\":\"req"
+    ]
   }
 }
