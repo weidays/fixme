@@ -132,5 +132,14 @@
     "reasons": [
       "API 400: 400 {\"type\":\"error\",\"error\":{\"type\":\"invalid_request_error\",\"message\":\"You have reached your specified API usage limits. You will regain access on 2026-10-01 at 00:00 UTC.\"},\"request_id\":\"req"
     ]
+  },
+  "york-furnace-clicking-but-not-starting": {
+    "count": 1,
+    "last": "2026-10-01",
+    "reasons": [
+      "The related-code links assign flash-code meanings that do not match common York/Source 1 (White-Rodgers-type) board documentation. On most York furnace boards ignition lockout is indicated by 1 flash ",
+      "Cost ranges are understated at the top end for 2026 US pricing. Inducer motor replacement is listed at $300–$650 when realistic installed pricing is roughly $400–$1,200, and control board replacement ",
+      "Ranking is not defensible as written. 'Failing control board relay' is placed first, ahead of failed hot-surface igniter and failed inducer motor, which are far more common real-world causes of a York"
+    ]
   }
 }
