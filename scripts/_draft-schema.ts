@@ -34,3 +34,21 @@ export function validateDraft(md: string): string | null {
   }
   return null;
 }
+
+/**
+ * Generated drafts sometimes link related codes with invented paths like
+ * "/carrier/furnace/code-14", which 404. Rewrite "/<brand>/<equipment>/<code>"
+ * links to the real "/error/<slug>/" URL when that page exists; otherwise keep
+ * the link text and drop the link. Other links are left alone.
+ */
+export function normalizeLinks(md: string, existingSlugs: Set<string>): string {
+  return md.replace(/\[([^\]]+)\]\((\/[^)\s]*)\)/g, (whole, text: string, href: string) => {
+    if (/^\/(error|brand|equipment|fix|quote)\//.test(href) || href === '/') return whole;
+    const parts = href.replace(/^\/|\/$/g, '').split('/');
+    if (parts.length === 3 && BRANDS.includes(parts[0]) && EQUIPMENT.includes(parts[1])) {
+      const slug = parts.join('-').toLowerCase();
+      if (existingSlugs.has(slug)) return `[${text}](/error/${slug}/)`;
+    }
+    return text;
+  });
+}

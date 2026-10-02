@@ -25,6 +25,7 @@
 | `/` | 首页：hero + 即时搜索 + 品牌格 + 设备格 |
 | `/error/[slug]` | 核心 SEO 页：码含义 → 排序原因 → 安全 DIY 检查 → 技师视角 → 症状表 → 价格 → FAQ + 两轨变现 |
 | `/brand/[brand]` | 品牌列表页（carrier/goodman/trane…） |
+| `/brand/[brand]/[equipment]` | 品牌 × 设备故障码总表（如 `/brand/carrier/furnace/`） |
 | `/equipment/[type]` | 设备列表页（furnace/ac/heat-pump/thermostat/mini-split） |
 | `/quote` | 报价 lead 表单（轨 B，带来源页归因 + 蜜罐反垃圾） |
 | `/fix` | 码查询工具：本地匹配 + 未命中上报 + AI 诊断（带燃气/CO 安全边界） |
@@ -33,6 +34,13 @@
 | `POST /api/report` | 未命中码入选题队列 |
 | `POST /api/diagnose` | AI 诊断（HVAC prompt + 安全边界，IP 日限免） |
 | `GET /api/queue` | 选题队列读取（ADMIN_TOKEN） |
+| `/admin` | 运营后台：lead 管理、渠道配置、漏斗数据、搜索需求（ADMIN_TOKEN 登录） |
+| `GET /api/channels` | 公开：当前电话号码和 partner 模式（页面 CTA 用） |
+| `GET /api/go` | 跳转到后台配置的 partner 链接（带 zip / subid） |
+| `POST /api/event` | CTA 点击计数（报价按钮、电话按钮） |
+| `/api/admin/*` | 后台接口：leads、stats、channels（ADMIN_TOKEN） |
+
+lead 渠道（pay-per-call 号码、affiliate 链接、webhook）的申请和配置见 [LEADS.md](LEADS.md)。SEO 和流量监控见 [SEO.md](SEO.md)。
 
 `public/_redirects`：旧域名路径 301 表（Cloudflare Pages 原生支持）。404 页会用旧路径推荐相近码页并把路径记进队列，`npm run queue-sync -- --dry-run` 直接输出可粘贴的 301 行。
 

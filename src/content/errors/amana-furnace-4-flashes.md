@@ -126,8 +126,8 @@ If a technician recommends heat-exchanger inspection after repeated overheating 
 
 ## Related codes
 
-- **1 flash — [Amana Furnace Code 1 Flashes](/amana/furnace/1-flashes):** the meaning of a single flash **varies by control board**. On many Goodman/Daikin-built integrated furnace controls it is documented as *flame sensed when no flame should be present* — a flame-signal or gas-valve fault, **not** ignition lockout. Unsuccessful-ignition lockout is indicated differently depending on the board. Read the legend on your own blower-door label before acting on it.
-- **2 flashes — [Amana Furnace 2 Flashes: Pressure Switch Stuck Closed Fix](/amana/furnace/2-flashes)** for venting/pressure faults.
-- **3 flashes — [Amana Furnace 3 Flashes: Pressure Switch Stuck Open Fix](/amana/furnace/3-flashes)** for a pressure switch that won't close.
+- **1 flash — [Amana Furnace Code 1 Flashes](/error/amana-furnace-1-flashes/):** the meaning of a single flash **varies by control board**. On many Goodman/Daikin-built integrated furnace controls it is documented as *flame sensed when no flame should be present* — a flame-signal or gas-valve fault, **not** ignition lockout. Unsuccessful-ignition lockout is indicated differently depending on the board. Read the legend on your own blower-door label before acting on it.
+- **2 flashes — [Amana Furnace 2 Flashes: Pressure Switch Stuck Closed Fix](/error/amana-furnace-2-flashes/)** for venting/pressure faults.
+- **3 flashes — [Amana Furnace 3 Flashes: Pressure Switch Stuck Open Fix](/error/amana-furnace-3-flashes/)** for a pressure switch that won't close.
 
 Always confirm the meaning against the diagnostic legend on your own furnace's blower-door label, since flash-code legends can vary by control board.

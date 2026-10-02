@@ -22,6 +22,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # IndexNow step diffs against the previous commit
 
       - uses: actions/setup-node@v4
         with:
@@ -41,3 +43,17 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy dist --project-name=fixme-vip
+
+      # Ping Bing & other IndexNow engines with the pages this deploy changed.
+      # Pushes diff against the previous main; manual / pipeline-dispatched runs
+      # diff against the parent commit (the pipeline's publish commit).
+      - name: Notify search engines (IndexNow)
+        continue-on-error: true
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          base="$BEFORE"
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$base" 2>/dev/null; then
+            base=$(git rev-parse HEAD~1)
+          fi
+          npx tsx scripts/indexnow.ts "$base" HEAD

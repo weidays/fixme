@@ -25,13 +25,13 @@
  * Non-zero only for configuration or API errors.
  */
 
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, readdirSync } from 'node:fs';
 import { basename } from 'node:path';
 import Anthropic from '@anthropic-ai/sdk';
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod';
 import { z } from 'zod';
 import yaml from 'js-yaml';
-import { validateDraft } from './_draft-schema';
+import { validateDraft, normalizeLinks } from './_draft-schema';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -212,7 +212,9 @@ async function reviewOne(client: Anthropic | null, file: string): Promise<Review
     if (next) {
       const v2 = await review(client, next, frontmatter(next), pageSeverity, reference);
       if (v2.verdict === 'pass') {
-        writeFileSync(file, next.endsWith('\n') ? next : next + '\n');
+        const existing = new Set(readdirSync(dirname(file)).filter((n) => n.endsWith('.md')).map((n) => n.replace(/\.md$/, '')));
+        const fixed = normalizeLinks(next, existing);
+        writeFileSync(file, fixed.endsWith('\n') ? fixed : fixed + '\n');
         revised = true;
       }
       v = v2; // report the latest verdict either way
