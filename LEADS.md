@@ -53,7 +53,10 @@
 填了 signing secret 时，请求头带 `X-Fixme-Signature: sha256=<HMAC-SHA256(secret, 原始 body) 的十六进制>`，接收方可以验签。
 后台的 "Send test lead" 按钮会发一条假 lead，并显示对方返回的 HTTP 状态。
 
-**不写代码就能先用上**：在 Zapier 建一个 "Webhooks by Zapier → Catch Hook"，把生成的 URL 填进来，下一步接 Google Sheets 或 Gmail。
+**不写代码就能先用上，两个选择：**
+
+- **Google Sheets（免费，推荐）**：用仓库里的 `integrations/google-sheets-webhook.gs`，文件开头有 6 步设置说明。每条 lead 变成表格里的一行，可选每条发一封邮件。
+- **Zapier**：建一个 "Webhooks by Zapier → Catch Hook"，把生成的 URL 填进来，下一步接 Google Sheets 或 Gmail。注意 Webhooks by Zapier 是付费功能，免费版用不了，试用期结束后要 Pro 方案才能继续跑。
 
 ## 接上网络之前：后台就是你的手动渠道
 
