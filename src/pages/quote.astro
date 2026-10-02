@@ -36,6 +36,9 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   </form>
 
   <div id="quote-result" class="applies-to hidden" role="status"></div>
+  <p id="quote-next" class="hidden">
+    <a class="btn" id="quote-next-link" href="#">See available local pros →</a>
+  </p>
 
   <p class="parts-disclosure">
     By submitting, you agree to be contacted about your project by fixme.vip
@@ -53,6 +56,17 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   // Attribution: which code page sent this visitor here.
   const from = new URLSearchParams(location.search).get('from');
   if (from) sourceField.value = from.slice(0, 120);
+
+  // 'direct' partner mode: the partner's form replaces ours, so send the
+  // visitor straight there (tracked by /api/go). Any error → keep our form.
+  fetch('/api/channels')
+    .then((r) => (r.ok ? r.json() : null))
+    .then((ch) => {
+      if (ch?.partner?.mode === 'direct') {
+        location.replace(`/api/go?src=${encodeURIComponent(sourceField.value)}`);
+      }
+    })
+    .catch(() => {});
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -75,8 +89,16 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       const body = await res.json().catch(() => null);
       if (res.ok) {
         form.classList.add('hidden');
-        result.textContent =
-          "Thanks — we've got your request. We'll review it and get in touch to connect you with a licensed local HVAC technician for a free estimate.";
+        if (body && body.next) {
+          // 'handoff' partner mode: offer the partner's matching form next.
+          result.textContent = `Thanks — your request is saved. Next, see which licensed technicians near ${data.zip} are available through ${body.partner}:`;
+          const link = document.getElementById('quote-next-link') as HTMLAnchorElement;
+          link.href = body.next;
+          document.getElementById('quote-next')!.classList.remove('hidden');
+        } else {
+          result.textContent =
+            "Thanks — we've got your request. We'll review it and get in touch to connect you with a licensed local HVAC technician for a free estimate.";
+        }
       } else {
         result.textContent =
           (body && body.error) || 'Something went wrong. Please try again.';
