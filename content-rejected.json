@@ -134,12 +134,34 @@
     ]
   },
   "york-furnace-clicking-but-not-starting": {
-    "count": 1,
-    "last": "2026-10-01",
+    "count": 2,
+    "last": "2026-10-02",
     "reasons": [
-      "The related-code links assign flash-code meanings that do not match common York/Source 1 (White-Rodgers-type) board documentation. On most York furnace boards ignition lockout is indicated by 1 flash ",
-      "Cost ranges are understated at the top end for 2026 US pricing. Inducer motor replacement is listed at $300–$650 when realistic installed pricing is roughly $400–$1,200, and control board replacement ",
-      "Ranking is not defensible as written. 'Failing control board relay' is placed first, ahead of failed hot-surface igniter and failed inducer motor, which are far more common real-world causes of a York"
+      "Cause ranking is not defensible. The #1 cause is listed as \"Failing ignition or blower relay on the control board,\" with a second board-failure entry at #6. On York (Johnson Controls) furnaces that pr",
+      "Cost figures are understated. Inducer motor is given as \"$300–$650 installed\" — realistic 2026 US installed pricing is roughly $400–$1,200; the top of the stated range is nearly half of reality. Integ",
+      "\"York Furnace 7 Flashes: Ignition Lockout Causes & Fixes\" asserts a specific LED flash-count meaning that I cannot confirm for York furnaces. York/Luxaire/Coleman integrated controls vary by board gen"
+    ]
+  },
+  "rheem-furnace-blower-won-t-shut-off": {
+    "count": 1,
+    "last": "2026-10-02",
+    "reasons": [
+      "The frontmatter costRange and meta description cap the repair at \"$350 if the control board or fan relay needs replacement.\" That is unrealistically low for a 2026 US integrated furnace control board ",
+      "\"Fan relay / control board replacement: $250–$600 installed\" — the floor is below any plausible real-world Rheem furnace control board job (board alone commonly runs $150–$400 plus diagnostic and 1–2 "
+    ]
+  },
+  "rheem-furnace-leaking-water": {
+    "count": 1,
+    "last": "2026-10-02",
+    "reasons": [
+      "Absolute claim that is factually wrong: \"Water around an 80% Rheem always comes from something above it — a plugged A-coil drain pan on an attached AC, a humidifier, or nearby plumbing — rather than t"
+    ]
+  },
+  "york-furnace-pressure-switch-stuck-open": {
+    "count": 1,
+    "last": "2026-10-02",
+    "reasons": [
+      "The page's body correctly states that \"there is no single flash count that applies across all York furnaces\" and that the number assigned to a pressure-switch fault differs by platform and board revis"
     ]
   }
 }
