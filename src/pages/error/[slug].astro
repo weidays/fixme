@@ -4,20 +4,27 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import QuoteCTA from '../../components/QuoteCTA.astro';
 import PartsList from '../../components/PartsList.astro';
 import SafetyWarning from '../../components/SafetyWarning.astro';
+import RelatedCodes from '../../components/RelatedCodes.astro';
 import { BRAND_LABELS, EQUIPMENT_LABELS } from '../../config';
+import { hubGroups, hubPath, relatedFor } from '../../lib/codes';
 
 export async function getStaticPaths() {
   const errors = await getCollection('errors');
+  const hubs = hubGroups(errors);
   return errors.map((entry) => ({
     params: { slug: entry.id },
-    props: { entry },
+    props: {
+      entry,
+      ...relatedFor(entry, errors),
+      hasHub: hubs.has(`${entry.data.brand}/${entry.data.equipment}`),
+    },
   }));
 }
 
-const { entry } = Astro.props;
+const { entry, siblings, sister, hasHub } = Astro.props;
 const { Content } = await render(entry);
 const d = entry.data;
-const pageUrl = new URL(`/error/${entry.id}`, Astro.site).href;
+const pageUrl = new URL(`/error/${entry.id}/`, Astro.site).href;
 const brandLabel = BRAND_LABELS[d.brand];
 const equipmentLabel = EQUIPMENT_LABELS[d.equipment];
 const isEmergency = d.severity === 'emergency';
@@ -55,9 +62,12 @@ const breadcrumbs = {
       '@type': 'ListItem',
       position: 2,
       name: brandLabel,
-      item: `https://fixme.vip/brand/${d.brand}`,
+      item: `https://fixme.vip/brand/${d.brand}/`,
     },
-    { '@type': 'ListItem', position: 3, name: d.title, item: pageUrl },
+    ...(hasHub
+      ? [{ '@type': 'ListItem', position: 3, name: `${brandLabel} ${equipmentLabel} codes`, item: new URL(hubPath(d.brand, d.equipment), Astro.site).href }]
+      : []),
+    { '@type': 'ListItem', position: hasHub ? 4 : 3, name: d.title, item: pageUrl },
   ],
 };
 
@@ -73,8 +83,12 @@ const fmt = (date: Date) =>
 >
   <article class="fix">
     <nav class="breadcrumbs" aria-label="Breadcrumb">
-      <a href="/">Home</a> › <a href={`/brand/${d.brand}`}>{brandLabel}</a> ›
-      <a href={`/equipment/${d.equipment}`}>{equipmentLabel}</a>
+      <a href="/">Home</a> › <a href={`/brand/${d.brand}/`}>{brandLabel}</a> ›
+      {hasHub ? (
+        <a href={hubPath(d.brand, d.equipment)}>{equipmentLabel} codes</a>
+      ) : (
+        <a href={`/equipment/${d.equipment}/`}>{equipmentLabel}</a>
+      )}
     </nav>
 
     <span class="badge">{brandLabel} · {equipmentLabel}</span>
@@ -95,7 +109,7 @@ const fmt = (date: Date) =>
     <div class="applies-to">
       <strong>Typical repair cost:</strong>
       {d.costRange}
-      {!isDiy && <> — <a href={`/quote?from=${entry.id}`}>compare free local quotes</a></>}
+      {!isDiy && <> — <a href={`/quote/?from=${entry.id}`}>compare free local quotes</a></>}
     </div>
 
     {/* Severity-driven rail ordering: DIY leads with parts, pro/emergency leads with quotes */}
@@ -119,6 +133,8 @@ const fmt = (date: Date) =>
       <PartsList parts={d.parts} />
     )}
 
+    <RelatedCodes entry={entry} siblings={siblings} sister={sister} hasHub={hasHub} />
+
     <section class="faq-block">
       <h2>Frequently asked questions</h2>
       {
@@ -133,7 +149,7 @@ const fmt = (date: Date) =>
 
     <div class="applies-to">
       Different code on your {equipmentLabel.toLowerCase()}?
-      <a href="/fix">Look it up</a> — and if we haven't covered it yet, telling
+      <a href="/fix/">Look it up</a> — and if we haven't covered it yet, telling
       us is how it gets written next.
     </div>
   </article>

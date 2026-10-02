@@ -5,7 +5,8 @@ import { getCollection } from 'astro:content';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import ErrorCard from '../../../components/ErrorCard.astro';
 import Pagination from '../../../components/Pagination.astro';
-import { BRANDS, BRAND_LABELS } from '../../../config';
+import { BRANDS, BRAND_LABELS, EQUIPMENT_LABELS } from '../../../config';
+import { hubGroups, hubPath } from '../../../lib/codes';
 
 export const getStaticPaths = (async ({ paginate }) => {
   const all = await getCollection('errors');
@@ -13,15 +14,17 @@ export const getStaticPaths = (async ({ paginate }) => {
     const errors = all
       .filter((e) => e.data.brand === brand)
       .sort((a, b) => b.data.dateModified.valueOf() - a.data.dateModified.valueOf());
-    return paginate(errors, { params: { brand }, pageSize: 24 });
+    const hubs = [...hubGroups(errors).entries()].map(([key, list]) => ({ equipment: key.split('/')[1], count: list.length }));
+    return paginate(errors, { params: { brand }, pageSize: 24, props: { hubs } });
   });
 }) satisfies GetStaticPaths;
 
 interface Props {
   page: Page<CollectionEntry<'errors'>>;
+  hubs: { equipment: string; count: number }[];
 }
 
-const { page } = Astro.props;
+const { page, hubs } = Astro.props;
 const { brand } = Astro.params;
 const label = BRAND_LABELS[brand as (typeof BRANDS)[number]];
 const pageSuffix = page.currentPage > 1 ? ` (page ${page.currentPage})` : '';
@@ -36,6 +39,15 @@ const pageSuffix = page.currentPage > 1 ? ` (page ${page.currentPage})` : '';
     {page.total} documented {page.total === 1 ? 'code' : 'codes'} with ranked
     causes, repair costs, and step-by-step guidance.
   </p>
+  {hubs.length > 0 && (
+    <p class="hub-links">
+      {hubs.map((h) => (
+        <a href={hubPath(brand!, h.equipment)}>
+          {label} {EQUIPMENT_LABELS[h.equipment as keyof typeof EQUIPMENT_LABELS].toLowerCase()} code chart ({h.count})
+        </a>
+      ))}
+    </p>
+  )}
   {page.data.map((entry) => <ErrorCard entry={entry} />)}
   <Pagination
     prevUrl={page.url.prev}

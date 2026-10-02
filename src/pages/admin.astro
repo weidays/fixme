@@ -241,7 +241,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       $('sources'),
       ['Page', 'Quote clicks', 'Call clicks', 'Partner clicks', 'Leads'],
       stats.topSources.map((s: Record<string, number | string>) => [
-        s.src === 'direct' ? 'direct' : el('a', { href: `/error/${s.src}`, target: '_blank', rel: 'noopener' }, String(s.src)),
+        s.src === 'direct' ? 'direct' : el('a', { href: `/error/${s.src}/`, target: '_blank', rel: 'noopener' }, String(s.src)),
         String(s.quote_click ?? 0),
         String(s.call_click ?? 0),
         String(s.partner_click ?? 0),
@@ -292,7 +292,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
           String(l.name || '—'),
           el('a', { href: isEmail ? `mailto:${contact}` : `tel:${contact.replace(/[^\d+]/g, '')}` }, contact),
           el('div', { class: 'issue' }, String(l.issue)),
-          l.source && l.source !== 'direct' ? el('a', { href: `/error/${l.source}`, target: '_blank', rel: 'noopener' }, String(l.source)) : 'direct',
+          l.source && l.source !== 'direct' ? el('a', { href: `/error/${l.source}/`, target: '_blank', rel: 'noopener' }, String(l.source)) : 'direct',
           el('span', {}, ...routing),
           sel,
           note,

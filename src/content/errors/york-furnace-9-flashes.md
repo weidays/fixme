@@ -93,9 +93,9 @@ Because 9 flashes is a wiring/ground fault, there are **no furnace parts to buy*
 
 ## Related codes
 
-- **[York Furnace 2 Flashes: Pressure Switch Stuck Closed](/york/furnace/2-flashes)**
-- **[York Furnace 3 Flashes: Pressure Switch Open Causes & Fixes](/york/furnace/3-flashes)**
-- **[York Furnace 4 Flashes: Open Limit Switch Causes & Fixes](/york/furnace/4-flashes)**
-- **[York Furnace 5 Flashes: Flame Sensed With Gas Off](/york/furnace/5-flashes)**
-- **[York Furnace 6 Flashes: Pressure Switch Cycle Lockout](/york/furnace/6-flashes)**
-- **[York Furnace 7 Flashes: Ignition Lockout Causes & Fixes](/york/furnace/7-flashes)**
+- **[York Furnace 2 Flashes: Pressure Switch Stuck Closed](/error/york-furnace-2-flashes/)**
+- **[York Furnace 3 Flashes: Pressure Switch Open Causes & Fixes](/error/york-furnace-3-flashes/)**
+- **[York Furnace 4 Flashes: Open Limit Switch Causes & Fixes](/error/york-furnace-4-flashes/)**
+- **[York Furnace 5 Flashes: Flame Sensed With Gas Off](/error/york-furnace-5-flashes/)**
+- **[York Furnace 6 Flashes: Pressure Switch Cycle Lockout](/error/york-furnace-6-flashes/)**
+- **[York Furnace 7 Flashes: Ignition Lockout Causes & Fixes](/error/york-furnace-7-flashes/)**

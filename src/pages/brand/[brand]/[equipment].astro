@@ -1,0 +1,101 @@
+---
+// Code chart for one brand + equipment, e.g. /brand/carrier/furnace/ —
+// targets head searches like "carrier furnace error codes" and links every
+// code page in that family from one place.
+import type { CollectionEntry } from 'astro:content';
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { BRAND_LABELS, EQUIPMENT_LABELS } from '../../../config';
+import { hubGroups, hubPath, SISTER_BRANDS } from '../../../lib/codes';
+
+export async function getStaticPaths() {
+  const all = await getCollection('errors');
+  const groups = hubGroups(all);
+  return [...groups.entries()].map(([key, entries]) => {
+    const [brand, equipment] = key.split('/');
+    return { params: { brand, equipment }, props: { entries, hasSister: groups.has(`${SISTER_BRANDS[brand]}/${equipment}`) } };
+  });
+}
+
+interface Props {
+  entries: CollectionEntry<'errors'>[];
+  hasSister: boolean;
+}
+
+const { entries, hasSister } = Astro.props;
+const { brand, equipment } = Astro.params as { brand: keyof typeof BRAND_LABELS; equipment: keyof typeof EQUIPMENT_LABELS };
+const brandLabel = BRAND_LABELS[brand];
+const equipmentLabel = EQUIPMENT_LABELS[equipment];
+const pageUrl = new URL(hubPath(brand, equipment), Astro.site).href;
+const sister = SISTER_BRANDS[brand] as keyof typeof BRAND_LABELS | undefined;
+const updated = new Date(Math.max(...entries.map((e) => e.data.dateModified.valueOf())));
+const severityLabel = { diy: 'DIY-friendly', pro: 'Call a pro', emergency: 'Emergency' } as const;
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://fixme.vip/' },
+      { '@type': 'ListItem', position: 2, name: brandLabel, item: `https://fixme.vip/brand/${brand}/` },
+      { '@type': 'ListItem', position: 3, name: `${brandLabel} ${equipmentLabel} codes`, item: pageUrl },
+    ],
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'ItemList',
+    name: `${brandLabel} ${equipmentLabel} error codes`,
+    numberOfItems: entries.length,
+    itemListElement: entries.map((e, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: e.data.title,
+      url: new URL(`/error/${e.id}/`, Astro.site).href,
+    })),
+  },
+];
+---
+
+<BaseLayout
+  title={`${brandLabel} ${equipmentLabel} Error Codes & Meanings`}
+  description={`All ${entries.length} ${brandLabel} ${equipmentLabel.toLowerCase()} error codes and flash codes we've decoded: what each means, how serious it is, and what to do next.`}
+  jsonLd={jsonLd}
+>
+  <nav class="breadcrumbs" aria-label="Breadcrumb">
+    <a href="/">Home</a> › <a href={`/brand/${brand}/`}>{brandLabel}</a> › {equipmentLabel} codes
+  </nav>
+  <h1>{brandLabel} {equipmentLabel} error codes</h1>
+  <p>
+    {entries.length} {brandLabel} {equipmentLabel.toLowerCase()} codes and problems, each with ranked causes,
+    safe homeowner checks and honest repair costs. Count the flashes or read the code on your control board,
+    then find it below. Legends vary by board revision, so confirm against the label inside your unit's door.
+    {hasSister && sister && (
+      <>
+        {' '}{BRAND_LABELS[sister]} uses the same control boards — see{' '}
+        <a href={hubPath(sister, equipment)}>{BRAND_LABELS[sister]} {equipmentLabel.toLowerCase()} codes</a>.
+      </>
+    )}
+  </p>
+  <p class="meta-line">Last updated {updated.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</p>
+
+  <div class="code-table-wrap">
+    <table class="code-table">
+      <thead>
+        <tr><th>Code</th><th>What it means</th><th>Severity</th></tr>
+      </thead>
+      <tbody>
+        {entries.map((e) => (
+          <tr>
+            <td class="code-cell"><a href={`/error/${e.id}/`}>{e.data.code}</a></td>
+            <td>{e.data.description}</td>
+            <td><span class={`sev sev-${e.data.severity}`}>{severityLabel[e.data.severity]}</span></td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="applies-to">
+    Don't see your code? <a href="/fix/">Look it up</a> — every search we can't answer goes into the queue for the next guide.
+  </div>
+</BaseLayout>

@@ -20,7 +20,7 @@ import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import yaml from 'js-yaml';
 
-import { validateDraft } from './_draft-schema';
+import { validateDraft, normalizeLinks } from './_draft-schema';
 
 interface BacklogItem {
   brand?: string;
@@ -170,7 +170,7 @@ Body structure, exactly these sections:
 ## How a technician will diagnose it      (so readers can sanity-check a quote)
 ## Symptom, cause and what to do          (markdown table: Symptom | Likely cause | DIY action | Technician job)
 ## Repair costs                           (honest US ranges per component)
-## Related codes
+## Related codes                         (plain text only — no markdown links; the site adds links to related pages automatically)
 
 CRITICAL YAML SYNTAX (or the build rejects the page): wrap the values of title, code, description, costRange and appliesTo in double quotes — they contain colons, dashes, commas or "$" that break unquoted YAML. Do not use unescaped double quotes inside a quoted value. The frontmatter must be valid YAML.
 
@@ -237,7 +237,9 @@ for (const item of pending) {
     continue;
   }
 
-  writeFileSync(outPath, good + '\n');
+  // Repair any invented internal link paths against the pages that exist now.
+  const existing = new Set(readdirSync(ERRORS_DIR).filter((n) => n.endsWith('.md')).map((n) => n.replace(/\.md$/, '')));
+  writeFileSync(outPath, normalizeLinks(good, existing) + '\n');
   written++;
   console.log(`generated: ${item.slug}`);
 }

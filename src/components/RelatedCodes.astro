@@ -1,0 +1,36 @@
+---
+// Internal links from every error page to its neighbours: other codes on the
+// same brand + equipment, the same code on the sister brand that shares its
+// control boards, and the full code chart.
+import type { CollectionEntry } from 'astro:content';
+import { BRAND_LABELS } from '../config';
+import { hubLabel, hubPath } from '../lib/codes';
+
+interface Props {
+  entry: CollectionEntry<'errors'>;
+  siblings: CollectionEntry<'errors'>[];
+  sister: CollectionEntry<'errors'> | null;
+  hasHub: boolean;
+}
+
+const { entry, siblings, sister, hasHub } = Astro.props;
+const d = entry.data;
+const label = hubLabel(d.brand, d.equipment);
+---
+
+{(siblings.length > 0 || sister) && (
+  <section class="related-codes" aria-labelledby="more-codes">
+    <h2 id="more-codes">More {label} codes</h2>
+    <ul class="related-list">
+      {siblings.map((e) => (
+        <li><a href={`/error/${e.id}/`}><strong>{e.data.code}</strong> — {e.data.title.replace(/^[^:]*:\s*/, '')}</a></li>
+      ))}
+    </ul>
+    {sister && (
+      <p>
+        Same control board family: <a href={`/error/${sister.id}/`}>{`${BRAND_LABELS[sister.data.brand]} ${sister.data.code}`}</a>
+      </p>
+    )}
+    {hasHub && <p><a href={hubPath(d.brand, d.equipment)}>See all {label} error codes →</a></p>}
+  </section>
+)}

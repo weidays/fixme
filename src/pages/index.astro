@@ -30,7 +30,7 @@ const recent = [...errors]
       Brand-specific HVAC error codes decoded: ranked causes, safe DIY checks,
       honest repair costs, and when to call a licensed technician.
     </p>
-    <form class="search-box" action="/fix" method="get" role="search">
+    <form class="search-box" action="/fix/" method="get" role="search">
       <input
         name="q"
         type="search"
@@ -45,7 +45,7 @@ const recent = [...errors]
   <div class="category-grid">
     {
       BRANDS.filter((b) => countByBrand[b] > 0).map((b) => (
-        <a href={`/brand/${b}`}>
+        <a href={`/brand/${b}/`}>
           {BRAND_LABELS[b]}
           <span>{countByBrand[b]} {countByBrand[b] === 1 ? 'code' : 'codes'}</span>
         </a>
@@ -57,7 +57,7 @@ const recent = [...errors]
   <div class="category-grid">
     {
       EQUIPMENT.filter((t) => countByEquipment[t] > 0).map((t) => (
-        <a href={`/equipment/${t}`}>
+        <a href={`/equipment/${t}/`}>
           {EQUIPMENT_LABELS[t]}
           <span>{countByEquipment[t]} {countByEquipment[t] === 1 ? 'code' : 'codes'}</span>
         </a>
@@ -68,9 +68,9 @@ const recent = [...errors]
   <h2 class="section-title">Recently added</h2>
   {recent.map((entry) => <ErrorCard entry={entry} />)}
   <p class="applies-to">
-    Looking for a specific code? <a href="/fix">Search the full library</a> or
-    browse <a href="/equipment/furnace">furnaces</a>,
-    <a href="/equipment/air-conditioner">air conditioners</a> and
-    <a href="/equipment/heat-pump">heat pumps</a>.
+    Looking for a specific code? <a href="/fix/">Search the full library</a> or
+    browse <a href="/equipment/furnace/">furnaces</a>,
+    <a href="/equipment/air-conditioner/">air conditioners</a> and
+    <a href="/equipment/heat-pump/">heat pumps</a>.
   </p>
 </BaseLayout>

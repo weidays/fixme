@@ -12,7 +12,7 @@ const d = entry.data;
 
 <a
   class="error-card"
-  href={`/error/${entry.id}`}
+  href={`/error/${entry.id}/`}
   data-search={`${BRAND_LABELS[d.brand]} ${EQUIPMENT_LABELS[d.equipment]} ${d.code} ${d.title} ${d.tags.join(' ')}`.toLowerCase()}
 >
   <span class="error-msg">{BRAND_LABELS[d.brand]} {EQUIPMENT_LABELS[d.equipment]} — {d.code}</span>

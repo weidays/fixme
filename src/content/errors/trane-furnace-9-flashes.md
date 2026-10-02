@@ -96,7 +96,7 @@ Because the fragile ceramic element, in-cabinet wiring and multimeter testing al
 
 ## Related codes
 
-- **[Trane Furnace 2 Flashes: System Lockout Causes & Fixes](/trane/furnace/2-flashes)** — general ignition lockout.
-- **[Trane Furnace 5 Flashes: Flame Sensed Without Gas](/trane/furnace/5-flashes)** — flame-proving fault.
-- **[Trane Furnace 7 Flashes: Gas Valve Circuit Error Fixes](/trane/furnace/7-flashes)** — gas valve control-circuit fault.
-- **[Trane Furnace 8 Flashes: Low Flame Sense Signal Fix](/trane/furnace/8-flashes)** — weak flame current, a related sensing issue.
+- **[Trane Furnace 2 Flashes: System Lockout Causes & Fixes](/error/trane-furnace-2-flashes/)** — general ignition lockout.
+- **[Trane Furnace 5 Flashes: Flame Sensed Without Gas](/error/trane-furnace-5-flashes/)** — flame-proving fault.
+- **[Trane Furnace 7 Flashes: Gas Valve Circuit Error Fixes](/error/trane-furnace-7-flashes/)** — gas valve control-circuit fault.
+- **[Trane Furnace 8 Flashes: Low Flame Sense Signal Fix](/error/trane-furnace-8-flashes/)** — weak flame current, a related sensing issue.
