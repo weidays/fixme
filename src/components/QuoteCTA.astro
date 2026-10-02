@@ -11,7 +11,7 @@ interface Props {
 }
 
 const { source, heading = 'Get this fixed by a local pro', urgent = false } = Astro.props;
-const quoteHref = `/quote?from=${encodeURIComponent(source)}`;
+const quoteHref = `/quote/?from=${encodeURIComponent(source)}`;
 ---
 
 <div class={`quote-cta ${urgent ? 'urgent' : ''}`} data-src={source}>

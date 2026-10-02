@@ -27,7 +27,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
   <p id="no-match" class="hidden applies-to">
     We haven't written this one up yet — it's been recorded as a candidate for
     our next guide. Meanwhile, use the button below for an AI read on your
-    exact fault, or <a href="/quote">get a free local pro quote</a>.
+    exact fault, or <a href="/quote/">get a free local pro quote</a>.
   </p>
 
   <div class="diagnose-row hidden" id="diagnose-row">
@@ -42,7 +42,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     <p class="applies-to">
       <strong>Safety note:</strong> AI guidance can't see your unit. Anything
       involving gas, burners, or safety switches needs a licensed technician —
-      <a href="/quote">get free local quotes</a>.
+      <a href="/quote/">get free local quotes</a>.
     </p>
   </div>
 </BaseLayout>
@@ -203,7 +203,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
     for (const { entry } of scored) {
       const a = document.createElement('a');
       a.className = 'error-card';
-      a.href = `/error/${entry.slug}`;
+      a.href = `/error/${entry.slug}/`;
       const msg = document.createElement('span');
       msg.className = 'error-msg';
       msg.textContent = entry.error;

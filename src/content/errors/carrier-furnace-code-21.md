@@ -100,9 +100,9 @@ Because Code 21 points to the control circuit and valve wiring — not consumabl
 
 ## Related codes
 
-- **[Carrier Furnace Code 14: Ignition Lockout Causes & Fixes](/carrier/furnace/code-14)** — the true ignition lockout, often confused with Code 21.
-- **[Carrier Furnace Code 34: Ignition Proving Failure & Fixes](/carrier/furnace/code-34)** — flame-proving and gas-delivery timing issues.
-- **[Carrier Furnace Code 33: Causes, Fixes & Costs](/carrier/furnace/code-33)** — limit/flame rollout related lockouts.
-- **[Carrier Furnace Code 13: Meaning, Causes & Fixes](/carrier/furnace/code-13)** — another lockout-family status code.
-- **[Carrier Furnace Code 12: Meaning, Causes & Fixes](/carrier/furnace/code-12)** — control/power related status.
-- **[Carrier Furnace Code 41: Blower Motor Fault & Fixes](/carrier/furnace/code-41)** — blower-side board and motor faults.
+- **[Carrier Furnace Code 14: Ignition Lockout Causes & Fixes](/error/carrier-furnace-code-14/)** — the true ignition lockout, often confused with Code 21.
+- **[Carrier Furnace Code 34: Ignition Proving Failure & Fixes](/error/carrier-furnace-code-34/)** — flame-proving and gas-delivery timing issues.
+- **[Carrier Furnace Code 33: Causes, Fixes & Costs](/error/carrier-furnace-code-33/)** — limit/flame rollout related lockouts.
+- **[Carrier Furnace Code 13: Meaning, Causes & Fixes](/error/carrier-furnace-code-13/)** — another lockout-family status code.
+- **[Carrier Furnace Code 12: Meaning, Causes & Fixes](/error/carrier-furnace-code-12/)** — control/power related status.
+- **[Carrier Furnace Code 41: Blower Motor Fault & Fixes](/error/carrier-furnace-code-41/)** — blower-side board and motor faults.

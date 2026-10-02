@@ -529,3 +529,24 @@ h2.section-title {
   font-size: 0.85rem;
   margin-top: 2.5rem;
 }
+
+/* Code chart hub pages + related codes block */
+.code-table-wrap { overflow-x: auto; margin: 1rem 0 1.5rem; }
+.code-table { border-collapse: collapse; width: 100%; font-size: 0.95rem; }
+.code-table th, .code-table td { text-align: left; padding: 0.6rem 0.7rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+.code-table .code-cell { white-space: nowrap; font-weight: 600; }
+.sev { display: inline-block; font-size: 0.8rem; padding: 0.1rem 0.5rem; border-radius: 999px; border: 1px solid var(--border); white-space: nowrap; }
+.sev-emergency { border-color: #d92d20; color: #b42318; }
+.sev-diy { border-color: #12b76a; color: #027a48; }
+.related-codes { margin: 2rem 0 1rem; }
+.related-list { padding-left: 1.1rem; }
+.related-list li { margin: 0.35rem 0; }
+.hub-links { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.8rem 0 1.4rem; }
+.hub-links a { border: 1px solid var(--border); border-radius: 999px; padding: 0.3rem 0.8rem; }
+@media (max-width: 600px) {
+  .code-table thead { display: none; }
+  .code-table, .code-table tbody, .code-table tr, .code-table td { display: block; width: 100%; }
+  .code-table tr { border-bottom: 1px solid var(--border); padding: 0.6rem 0; }
+  .code-table td { border: 0; padding: 0.15rem 0; }
+  .code-table .code-cell { font-size: 1.05rem; }
+}

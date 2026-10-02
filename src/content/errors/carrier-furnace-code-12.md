@@ -103,9 +103,9 @@ Get connection and transformer checks done before authorizing a control board �
 
 ## Related codes
 
-- **[Carrier Furnace Code 13](/carrier/furnace/code-13):** Meaning, Causes & Fixes
-- **[Carrier Furnace Code 14](/carrier/furnace/code-14):** Ignition Lockout Causes & Fixes
-- **[Carrier Furnace Code 31](/carrier/furnace/code-31):** Pressure switch — Causes, Fixes & Costs
-- **[Carrier Furnace Code 33](/carrier/furnace/code-33):** Causes, Fixes & Costs
-- **[Carrier Furnace Code 34](/carrier/furnace/code-34):** Ignition Proving Failure & Fixes
-- **[Carrier Furnace Code 41](/carrier/furnace/code-41):** Blower Motor Fault & Fixes
+- **[Carrier Furnace Code 13](/error/carrier-furnace-code-13/):** Meaning, Causes & Fixes
+- **[Carrier Furnace Code 14](/error/carrier-furnace-code-14/):** Ignition Lockout Causes & Fixes
+- **[Carrier Furnace Code 31](/error/carrier-furnace-code-31/):** Pressure switch — Causes, Fixes & Costs
+- **[Carrier Furnace Code 33](/error/carrier-furnace-code-33/):** Causes, Fixes & Costs
+- **[Carrier Furnace Code 34](/error/carrier-furnace-code-34/):** Ignition Proving Failure & Fixes
+- **[Carrier Furnace Code 41](/error/carrier-furnace-code-41/):** Blower Motor Fault & Fixes

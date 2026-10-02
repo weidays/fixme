@@ -21,7 +21,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       might — look up your error code or browse by brand.
     </p>
     <p>
-      <a class="btn" id="lookup-link" href="/fix">Look up your code</a>
+      <a class="btn" id="lookup-link" href="/fix/">Look up your code</a>
     </p>
   </section>
 
@@ -51,7 +51,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       .replace(/"/g, '&quot;');
 
   if (words.length && lookup) {
-    lookup.setAttribute('href', '/fix?q=' + encodeURIComponent(words.join(' ')));
+    lookup.setAttribute('href', '/fix/?q=' + encodeURIComponent(words.join(' ')));
   }
 
   // Record the dead path so the redirect list can be built from real hits.
@@ -80,7 +80,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
         cards.innerHTML = scored
           .map(
             ({ entry }) =>
-              `<a class="error-card" href="/error/${encodeURIComponent(entry.slug)}">` +
+              `<a class="error-card" href="/error/${encodeURIComponent(entry.slug)}/">` +
               `<span class="error-msg">${escapeHtml(entry.error)}</span>` +
               `<span class="card-title">${escapeHtml(entry.title)}</span></a>`
           )
