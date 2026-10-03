@@ -12,7 +12,11 @@
  *   npx tsx scripts/generate-batch.ts --dry-run   # list selections, no API calls
  *
  * Env: ANTHROPIC_API_KEY (required unless --dry-run), COUNT (default 10),
- *      CLAUDE_MODEL (default claude-opus-4-8).
+ *      CLAUDE_MODEL (default claude-opus-5-5), GEN_EFFORT (default low).
+ *
+ * Opus 5.5 always thinks (thinking cannot be disabled); effort is the only
+ * control. 'low' keeps thinking short for this templated writing task — raise
+ * it to 'medium' if first-draft pass rates drop.
  */
 
 import { readFileSync, writeFileSync, existsSync, readdirSync } from 'node:fs';
@@ -38,7 +42,8 @@ const BACKLOG = join(root, 'content-backlog.json');
 const COUNT = Number(process.env.COUNT ?? '10');
 const DRY = process.argv.includes('--dry-run');
 const apiKey = process.env.ANTHROPIC_API_KEY;
-const model = process.env.CLAUDE_MODEL ?? 'claude-opus-4-8';
+const model = process.env.CLAUDE_MODEL ?? 'claude-opus-5-5';
+const effort = process.env.GEN_EFFORT ?? 'low'; // low | medium | high | xhigh | max
 
 function slugify(brand: string, equipment: string, code: string): string {
   return `${brand}-${equipment}-${code}`
@@ -189,7 +194,10 @@ async function generateOne(item: { brand: string; equipment: string; code: strin
     },
     body: JSON.stringify({
       model,
-      max_tokens: 5000,
+      // Thinking tokens count toward max_tokens on models that think, so leave
+      // room for them on top of a ~5k-token page.
+      max_tokens: 16000,
+      output_config: { effort },
       messages: [{ role: 'user', content: buildPrompt(item) }],
     }),
   });
@@ -197,7 +205,13 @@ async function generateOne(item: { brand: string; equipment: string; code: strin
     console.error(`  API error ${res.status}: ${(await res.text()).slice(0, 200)}`);
     return null;
   }
-  const data = (await res.json()) as { content: { type: string; text?: string }[] };
+  const data = (await res.json()) as { content: { type: string; text?: string }[]; stop_reason?: string };
+  // A truncated page can still have valid frontmatter, so reject it here rather
+  // than publish half an article. Refusals carry no usable text.
+  if (data.stop_reason === 'max_tokens' || data.stop_reason === 'refusal') {
+    console.error(`  stopped early (${data.stop_reason}) — discarding this attempt`);
+    return null;
+  }
   const md = data.content.filter((b) => b.type === 'text').map((b) => b.text).join('').trim();
   return md || null;
 }
