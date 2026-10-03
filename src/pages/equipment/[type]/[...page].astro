@@ -5,7 +5,8 @@ import { getCollection } from 'astro:content';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import ErrorCard from '../../../components/ErrorCard.astro';
 import Pagination from '../../../components/Pagination.astro';
-import { EQUIPMENT, EQUIPMENT_LABELS } from '../../../config';
+import { BRAND_LABELS, EQUIPMENT, EQUIPMENT_LABELS, MIN_INDEXABLE_LISTING } from '../../../config';
+import { hubGroups, hubPath } from '../../../lib/codes';
 
 export const getStaticPaths = (async ({ paginate }) => {
   const all = await getCollection('errors');
@@ -13,29 +14,45 @@ export const getStaticPaths = (async ({ paginate }) => {
     const errors = all
       .filter((e) => e.data.equipment === type)
       .sort((a, b) => b.data.dateModified.valueOf() - a.data.dateModified.valueOf());
-    return paginate(errors, { params: { type }, pageSize: 24 });
+    const hubs = [...hubGroups(errors).entries()].map(([key, list]) => ({ brand: key.split('/')[0], count: list.length }));
+    return paginate(errors, { params: { type }, pageSize: 24, props: { hubs } });
   });
 }) satisfies GetStaticPaths;
 
 interface Props {
   page: Page<CollectionEntry<'errors'>>;
+  hubs: { brand: string; count: number }[];
 }
 
-const { page } = Astro.props;
+const { page, hubs } = Astro.props;
 const { type } = Astro.params;
 const label = EQUIPMENT_LABELS[type as (typeof EQUIPMENT)[number]];
 const pageSuffix = page.currentPage > 1 ? ` (page ${page.currentPage})` : '';
+// Paginated pages need their own title and description, or Search Console
+// reports them as duplicates of page 1.
+const titleSuffix = page.currentPage > 1 ? ` – Page ${page.currentPage}` : '';
+const descPrefix = page.currentPage > 1 ? `Page ${page.currentPage} of ${page.lastPage}. ` : '';
 ---
 
 <BaseLayout
-  title={`${label} Error Codes & Fault Lights, Explained`}
-  description={`${label} error codes and blinking-light faults decoded by brand — meanings, ranked causes, honest repair costs, and when you need a licensed pro.`}
+  title={`${label} Error Codes & Fault Lights, Explained${titleSuffix}`}
+  description={`${descPrefix}${label} error codes and blinking-light faults decoded by brand — meanings, ranked causes, honest repair costs, and when you need a licensed pro.`}
+  noindex={page.total < MIN_INDEXABLE_LISTING}
 >
   <h1>{label} error codes{pageSuffix}</h1>
   <p>
     {page.total} documented {page.total === 1 ? 'code' : 'codes'} across brands,
     with ranked causes and repair costs.
   </p>
+  {hubs.length > 0 && (
+    <p class="hub-links">
+      {hubs.map((h) => (
+        <a href={hubPath(h.brand, type!)}>
+          {BRAND_LABELS[h.brand as keyof typeof BRAND_LABELS]} {label.toLowerCase()} code chart ({h.count})
+        </a>
+      ))}
+    </p>
+  )}
   {page.data.map((entry) => <ErrorCard entry={entry} />)}
   <Pagination
     prevUrl={page.url.prev}

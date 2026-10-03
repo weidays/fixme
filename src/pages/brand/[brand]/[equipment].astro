@@ -30,6 +30,12 @@ const pageUrl = new URL(hubPath(brand, equipment), Astro.site).href;
 const sister = SISTER_BRANDS[brand] as keyof typeof BRAND_LABELS | undefined;
 const updated = new Date(Math.max(...entries.map((e) => e.data.dateModified.valueOf())));
 const severityLabel = { diy: 'DIY-friendly', pro: 'Call a pro', emergency: 'Emergency' } as const;
+const bySeverity = (s: keyof typeof severityLabel) => entries.filter((e) => e.data.severity === s).length;
+const severitySummary = [
+  bySeverity('emergency') && `${bySeverity('emergency')} ${bySeverity('emergency') === 1 ? 'is an emergency' : 'are emergencies'} (shut the unit off and call a licensed tech)`,
+  bySeverity('pro') && `${bySeverity('pro')} ${bySeverity('pro') === 1 ? 'needs' : 'need'} a professional repair`,
+  bySeverity('diy') && `${bySeverity('diy')} ${bySeverity('diy') === 1 ? 'is' : 'are'} usually safe to check yourself`,
+].filter(Boolean);
 
 const jsonLd = [
   {
@@ -76,6 +82,9 @@ const jsonLd = [
       </>
     )}
   </p>
+  {severitySummary.length > 1 && (
+    <p>Of these, {severitySummary.join(', ').replace(/, ([^,]*)$/, ' and $1')}.</p>
+  )}
   <p class="meta-line">Last updated {updated.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })}</p>
 
   <div class="code-table-wrap">
