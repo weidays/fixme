@@ -31,11 +31,22 @@ jobs:
 
       - run: npm install
 
+      - name: Analytics beacon check
+        env:
+          CF_BEACON_TOKEN: ${{ vars.CF_BEACON_TOKEN || secrets.CF_BEACON_TOKEN }}
+        run: |
+          if [ -z "$CF_BEACON_TOKEN" ]; then
+            echo "::warning::CF_BEACON_TOKEN is not set (neither repo Variable nor Secret) — Cloudflare Web Analytics will not collect visits."
+          else
+            echo "CF_BEACON_TOKEN found (${#CF_BEACON_TOKEN} chars) — beacon will be injected."
+          fi
+
       - run: npm run build
         env:
-          # Cloudflare Web Analytics beacon token (public value — a repo
-          # Variable, not a Secret). Leave unset to build without the beacon.
-          CF_BEACON_TOKEN: ${{ vars.CF_BEACON_TOKEN }}
+          # Cloudflare Web Analytics beacon token. Read from either the repo
+          # Variables tab or the Secrets tab, whichever it was saved under.
+          # Unset in both = build without the beacon.
+          CF_BEACON_TOKEN: ${{ vars.CF_BEACON_TOKEN || secrets.CF_BEACON_TOKEN }}
 
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
