@@ -1,0 +1,71 @@
+---
+import LegalPage from '../components/LegalPage.astro';
+import { CONTACT_EMAIL } from '../config';
+
+const org = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'fixme.vip',
+  url: 'https://fixme.vip/',
+  email: CONTACT_EMAIL,
+  contactPoint: { '@type': 'ContactPoint', email: CONTACT_EMAIL, contactType: 'customer support', availableLanguage: 'English' },
+};
+---
+
+<LegalPage
+  title="About fixme.vip — HVAC Error Codes Explained"
+  description="Who runs fixme.vip, how our HVAC error-code guides are researched, written and checked, and how the site is funded."
+  heading="About fixme.vip"
+  jsonLd={[org]}
+>
+  <p>
+    When a furnace or air conditioner stops and the control board starts flashing a code, most homeowners have two
+    questions: what does it mean, and is this something I can safely check myself or do I need a technician?
+    fixme.vip answers both, one code at a time, for the major US brands.
+  </p>
+
+  <h2>What every guide includes</h2>
+  <ul>
+    <li>What the code means, and where the meaning varies between models or control boards.</li>
+    <li>Likely causes, ranked by probability.</li>
+    <li>
+      Safe checks a homeowner can do, limited to the thermostat, air filter, breaker, visible vents and condensate
+      line.
+    </li>
+    <li>How a technician will diagnose the problem, so you can sanity-check a quote.</li>
+    <li>Realistic US repair cost ranges.</li>
+  </ul>
+
+  <h2>How guides are made</h2>
+  <p>We want you to know exactly how this content is produced.</p>
+  <ul>
+    <li>
+      Each guide starts from the manufacturer's published meaning for that code, taken from control-board legends and
+      installation manuals.
+    </li>
+    <li>The draft is written with the help of AI.</li>
+    <li>
+      Before it is published, a separate review step checks the draft against that meaning and against a safety
+      checklist. A draft is rejected if it invents a code meaning, gives unsafe instructions such as bypassing a safety
+      switch or working on gas or refrigerant, or quotes unrealistic prices.
+    </li>
+    <li>Pages about gas smells, carbon monoxide or flame rollout are also reviewed by a person before they go live.</li>
+  </ul>
+  <p>
+    Guides are signed "fixme.vip Editorial". None of them has yet been reviewed by a licensed HVAC technician, and
+    we don't claim credentials we don't have. If you spot an error, please email us and we will fix it.
+  </p>
+
+  <h2>How the site is funded</h2>
+  <p>
+    The guides are free. The site earns money from affiliate links, for example as an Amazon Associate, and from
+    connecting homeowners who ask for a repair quote with local professionals. Neither affects what a guide says.
+    We never tell you to buy a part or call a professional when a safe free check is the right first step.
+  </p>
+
+  <h2>Contact</h2>
+  <p>
+    Corrections, questions and partnership enquiries go to <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
+    See also our <a href="/contact/">contact page</a>.
+  </p>
+</LegalPage>

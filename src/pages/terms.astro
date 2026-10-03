@@ -1,0 +1,69 @@
+---
+import LegalPage from '../components/LegalPage.astro';
+import { CONTACT_EMAIL } from '../config';
+---
+
+<LegalPage
+  title="Terms of Use — fixme.vip"
+  description="The terms for using fixme.vip's HVAC error-code guides, lookup tool and quote request form, including safety limits and affiliate disclosure."
+  heading="Terms of Use"
+  updated="2026-10-03"
+>
+  <p>
+    By using fixme.vip you agree to these terms. If you don't agree, please don't use the site. Questions go to
+    <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
+  </p>
+
+  <h2>General information, not professional advice</h2>
+  <p>
+    Our guides explain what HVAC error codes usually mean and which checks are safe for a homeowner. They are
+    general information. We cannot see your equipment, and code meanings vary by model and control board. Always
+    check the label inside your unit and its manufacturer's manual.
+  </p>
+  <p>
+    Gas furnaces, refrigerant and electrical work can cause fire, carbon monoxide poisoning, injury or death. Only a
+    licensed technician should work inside the cabinet, on gas valves, on safety switches or on refrigerant.
+    <strong>If you smell gas or a carbon monoxide alarm sounds, leave the building and call your gas utility or 911
+    from outside.</strong>
+  </p>
+
+  <h2>AI-assisted content</h2>
+  <p>
+    Our guides are drafted with the help of AI tools and checked before publication, as described on our
+    <a href="/about/">About page</a>. The AI diagnosis tool gives an automated answer that can be wrong. Treat it as a
+    starting point, not a diagnosis.
+  </p>
+
+  <h2>Quote requests</h2>
+  <p>
+    The quote form is free and creates no obligation. We do not perform repairs. When you submit a request, we may
+    pass it to independent contractors or home-services networks. Any work, price or warranty is agreed between you
+    and them, and we are not a party to it. How we handle your details is set out in our
+    <a href="/privacy/">Privacy Policy</a>.
+  </p>
+
+  <h2>Affiliate disclosure</h2>
+  <p>
+    fixme.vip earns money from some links and referrals, including as an Amazon Associate from qualifying purchases,
+    and from partners when a quote request is passed on. This does not change what our guides recommend.
+  </p>
+
+  <h2>Acceptable use</h2>
+  <p>
+    Don't misuse the site. That includes submitting false or someone else's details, automated scraping that
+    burdens the site, or attempts to break its security.
+  </p>
+
+  <h2>No warranty; limit of liability</h2>
+  <p>
+    The site is provided "as is", without warranties of any kind. To the extent the law allows, fixme.vip is not
+    liable for any loss or damage arising from your use of the site or from acting on its content, including work
+    carried out by third-party contractors.
+  </p>
+
+  <h2>Links to other sites</h2>
+  <p>We link to other websites, such as retailers and partners. We are not responsible for their content or practices.</p>
+
+  <h2>Changes</h2>
+  <p>We may update these terms. The date at the top of the page shows the latest version.</p>
+</LegalPage>
