@@ -178,7 +178,7 @@ async function revise(client: Anthropic, md: string, v: VerdictT, reference?: st
 ${notes}
 
 ${refBlock}
-Rewrite the COMPLETE page — frontmatter and body — fixing every issue above, blocking and minor. Keep everything the editor did not object to. Do not add new claims, part numbers, or model-specific specs. Homeowner actions stay within: thermostat settings and batteries, air filter, breaker reset, one reset of a locked-out unit, visible vents, condensate line, exterior panels; everything inside the cabinet is technician work. The frontmatter must keep the same schema and the same brand, equipment, code and severity values; wrap title, code, description, costRange and appliesTo in double quotes; valid YAML. Output only the markdown file — no preamble, no code fence.
+Rewrite the COMPLETE page — frontmatter and body — fixing every issue above, blocking and minor. Keep everything the editor did not object to. Do not add new claims, part numbers, or model-specific specs. Homeowner actions stay within: thermostat settings and batteries, air filter, breaker reset, one reset of a locked-out unit, visible vents, condensate line, exterior panels; everything inside the cabinet is technician work. The frontmatter must keep the same schema and the same brand, equipment, code and severity values; title at most 60 characters; description between 50 and 160 characters (count them); at least 3 FAQ items with answers of 40+ characters; wrap title, code, description, costRange and appliesTo in double quotes; valid YAML. Output only the markdown file — no preamble, no code fence.
 
 <draft>
 ${md}

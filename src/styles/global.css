@@ -550,3 +550,9 @@ h2.section-title {
   .code-table td { border: 0; padding: 0.15rem 0; }
   .code-table .code-cell { font-size: 1.05rem; }
 }
+
+/* Footer info links + trust pages */
+.site-footer .footer-links { display: flex; flex-wrap: wrap; gap: 0.4rem 1.2rem; }
+article.legal h3 { margin-top: 1.2rem; font-size: 1.05rem; }
+article.legal ul { padding-left: 1.2rem; }
+article.legal li { margin: 0.3rem 0; }

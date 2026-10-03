@@ -56,7 +56,7 @@ ANTHROPIC_API_KEY=sk-... bun scripts/generate-code.ts \
 # 草稿在 drafts/，人工审校后移入 src/content/errors/ 再 build
 ```
 
-模型默认 `claude-opus-4-8`，可 `CLAUDE_MODEL=claude-haiku-4-5` 降本。
+生成模型默认 `claude-opus-5-5`（思考深度 low），审稿和重写默认 `claude-opus-5-5`。
 
 ```bash
 # 把访客在 /fix 搜过但没命中的码，按热度插到 content-backlog.json 顶部：

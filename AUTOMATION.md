@@ -51,7 +51,7 @@ git push -u origin main
 | `CLOUDFLARE_API_TOKEN` | 部署 | Cloudflare → My Profile → API Tokens → Create → 用 **"Edit Cloudflare Pages"** 模板 |
 | `CLOUDFLARE_ACCOUNT_ID` | 部署 | Cloudflare 任意域名概览页右侧 / URL 里那串 |
 
-可选 **Variables**(不是 Secrets):`CLAUDE_MODEL`(生成模型,默认 claude-opus-4-8)、`REVIEW_MODEL`(二审模型,默认 claude-opus-5-5;二审是质量闸,不建议降)、`CF_BEACON_TOKEN`(见 DEPLOY.md)。
+可选 **Variables**(不是 Secrets):`CLAUDE_MODEL`(生成模型,默认 claude-opus-5-5)、`GEN_EFFORT`(生成的思考深度,默认 low;Opus 5.5 不能关闭思考,只能调深浅)、`REVIEW_MODEL`(二审模型,默认 claude-opus-5-5;二审是质量闸,不建议降)、`CF_BEACON_TOKEN`(见 DEPLOY.md)。
 
 还要确认一项仓库设置:**Settings → Actions → General → Workflow permissions** 选 "Read and write permissions",并勾选 "Allow GitHub Actions to create and approve pull requests"。旧流程能开 PR 说明这已经是开着的。
 

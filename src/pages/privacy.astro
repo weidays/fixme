@@ -1,0 +1,108 @@
+---
+import LegalPage from '../components/LegalPage.astro';
+import { CONTACT_EMAIL } from '../config';
+---
+
+<LegalPage
+  title="Privacy Policy — fixme.vip"
+  description="What fixme.vip collects when you look up an HVAC code or request a repair quote, how it is used and shared, and how to ask for it to be deleted."
+  heading="Privacy Policy"
+  updated="2026-10-03"
+>
+  <p>
+    fixme.vip publishes guides to HVAC error codes for homeowners in the United States. This page explains what
+    information the site collects, why, who it is shared with, and the choices you have. Questions go to
+    <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>.
+  </p>
+
+  <h2>What we collect</h2>
+  <h3>When you request a repair quote</h3>
+  <p>The quote form asks for:</p>
+  <ul>
+    <li>your ZIP code (required),</li>
+    <li>your name (optional),</li>
+    <li>an email address or phone number (required), and</li>
+    <li>a description of the problem (required).</li>
+  </ul>
+  <p>
+    With the request we also record the page you came from, the date and time, and your browser's user-agent
+    string. We use this to understand which guides lead people to ask for help.
+  </p>
+
+  <h3>When you look up a code</h3>
+  <p>
+    If you type an error code or description into the lookup tool and we have no matching guide, that text is saved
+    so we know which guides to write next. If you use the AI diagnosis button, the text you entered is sent to our
+    AI provider to generate the answer. Please don't type personal details into the lookup box.
+  </p>
+
+  <h3>When you visit any page</h3>
+  <ul>
+    <li>
+      <strong>Analytics.</strong> We use Cloudflare Web Analytics to count page views, referring sites and
+      countries. It does not use cookies and does not build a profile of you.
+    </li>
+    <li>
+      <strong>Counters.</strong> We count clicks on the "Get free local quotes" and "Call" buttons, together with
+      the page they were on. These counts contain no personal information.
+    </li>
+    <li>
+      <strong>Security.</strong> Our hosting provider, Cloudflare, processes IP addresses to deliver the site and
+      block abuse. We use the IP address of AI diagnosis requests only to enforce a daily usage limit.
+    </li>
+  </ul>
+
+  <h2>How we use it</h2>
+  <ul>
+    <li>To connect you with a licensed HVAC professional or service network about the problem you described.</li>
+    <li>To reply to you about your request, including an optional one-time confirmation email.</li>
+    <li>To decide which guides to write and improve.</li>
+    <li>To keep the site working and protect it from spam and abuse.</li>
+  </ul>
+  <p>We do not send marketing email, and we do not sell your information to data brokers.</p>
+
+  <h2>Who we share it with</h2>
+  <ul>
+    <li>
+      <strong>Service professionals and lead partners.</strong> When you submit a quote request, we may pass it to
+      local HVAC contractors or to a home-services network that matches you with them. These parties may contact you
+      about your project, and their own privacy policies apply from then on.
+    </li>
+    <li>
+      <strong>Service providers that run the site for us.</strong> Cloudflare (hosting, storage and analytics),
+      Resend (email delivery), and Anthropic (the AI diagnosis feature, and the AI tools we use to draft guides).
+    </li>
+    <li><strong>Legal requirements.</strong> If we are required to by law.</li>
+  </ul>
+
+  <h2>Affiliate links</h2>
+  <p>
+    Some links to products, for example on Amazon, are affiliate links. If you click one, the retailer may set its
+    own cookies to credit fixme.vip for a purchase. As an Amazon Associate, fixme.vip earns from qualifying purchases.
+    We are not told who you are or what you bought.
+  </p>
+
+  <h2>How long we keep it</h2>
+  <p>
+    We keep quote requests for as long as we need them to follow up and to keep records of the requests we have
+    passed on. We keep lookup searches until they are no longer useful for planning guides. You can ask us to
+    delete your information at any time.
+  </p>
+
+  <h2>Your choices and rights</h2>
+  <p>
+    Email <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> to ask what we hold about you, to correct it, or
+    to delete it. We will reply within 30 days. Depending on where you live, for example California, you may have
+    additional rights under state privacy law. We honor these requests for everyone, wherever you live. We will not
+    treat you differently for making one.
+  </p>
+
+  <h2>Children</h2>
+  <p>This site is meant for adults. We do not knowingly collect information from children under 13.</p>
+
+  <h2>Changes to this policy</h2>
+  <p>
+    If we change this policy, we will update the date at the top of the page. Significant changes will be noted on
+    this page.
+  </p>
+</LegalPage>
