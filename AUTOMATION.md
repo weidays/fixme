@@ -51,7 +51,7 @@ git push -u origin main
 | `CLOUDFLARE_API_TOKEN` | 部署 | Cloudflare → My Profile → API Tokens → Create → 用 **"Edit Cloudflare Pages"** 模板 |
 | `CLOUDFLARE_ACCOUNT_ID` | 部署 | Cloudflare 任意域名概览页右侧 / URL 里那串 |
 
-可选 **Variables**(不是 Secrets):`CLAUDE_MODEL`(生成模型,默认 claude-opus-4-8)、`REVIEW_MODEL`(二审模型,默认 claude-opus-5;二审是质量闸,不建议降)、`CF_BEACON_TOKEN`(见 DEPLOY.md)。
+可选 **Variables**(不是 Secrets):`CLAUDE_MODEL`(生成模型,默认 claude-opus-4-8)、`REVIEW_MODEL`(二审模型,默认 claude-opus-5-5;二审是质量闸,不建议降)、`CF_BEACON_TOKEN`(见 DEPLOY.md)。
 
 还要确认一项仓库设置:**Settings → Actions → General → Workflow permissions** 选 "Read and write permissions",并勾选 "Allow GitHub Actions to create and approve pull requests"。旧流程能开 PR 说明这已经是开着的。
 
@@ -103,7 +103,7 @@ npx tsx scripts/generate-batch.ts --dry-run
 
 ## 调参
 
-- **每天几篇**:改 [generate-drafts.yml](.github/workflows/generate-drafts.yml) 里 `count` 默认值(现在 15),或手动触发时填。10 月中前要上 200 篇暖炉页,15/天、七成过审刚好够。
+- **每天几篇**:改 [generate-drafts.yml](.github/workflows/generate-drafts.yml) 里 `count` 默认值(现在 8),或手动触发时填。主要暖炉故障码已基本覆盖,8/天控制 API 成本。
 - **本地手动审一篇**:`ANTHROPIC_API_KEY=... npm run review -- --out r.json src/content/errors/xxx.md`
 - **几点跑**:改那个 `cron`(UTC 时间)。
 - **关掉自动**:Actions 页面把 workflow 禁用,或删 cron 只留手动。

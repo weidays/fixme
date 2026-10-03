@@ -20,7 +20,7 @@
  *   ANTHROPIC_API_KEY=... npx tsx scripts/review-draft.ts --revise --out review-report.json src/content/errors/a.md [b.md ...]
  *   npx tsx scripts/review-draft.ts --mock pass --out report.json a.md    # no API call (tests)
  *
- * Env: ANTHROPIC_API_KEY, REVIEW_MODEL (default claude-opus-5), REVISE_MODEL (default claude-opus-5).
+ * Env: ANTHROPIC_API_KEY, REVIEW_MODEL (default claude-opus-5-5), REVISE_MODEL (default claude-opus-5-5).
  * Exit code is 0 even when drafts fail review — the report carries verdicts.
  * Non-zero only for configuration or API errors.
  */
@@ -69,8 +69,8 @@ const OUT = arg('out') ?? 'review-report.json';
 const MOCK = arg('mock'); // 'pass' | 'fail' — test hook, never set in CI
 const REVISE = process.argv.includes('--revise');
 const files = process.argv.slice(2).filter((a, i, all) => !a.startsWith('--') && all[i - 1] !== '--out' && all[i - 1] !== '--mock');
-const model = process.env.REVIEW_MODEL ?? 'claude-opus-5';
-const reviseModel = process.env.REVISE_MODEL ?? 'claude-opus-5';
+const model = process.env.REVIEW_MODEL ?? 'claude-opus-5-5';
+const reviseModel = process.env.REVISE_MODEL ?? 'claude-opus-5-5';
 
 // Manufacturer-documented meanings from the backlog, keyed by slug, so the
 // reviewer checks the page against the same reference the generator was given.
