@@ -17,10 +17,8 @@ Google 不支持 IndexNow，它靠 sitemap 和 Search Console。
 
 ## 需要你在各平台后台做的（一次性）
 
-1. **Cloudflare Web Analytics 令牌。** 现在部署时这个变量还是空的，所以真人访问数据没有在收集。
-   Cloudflare → Analytics & Logs → Web Analytics → fixme.vip → 管理网站，复制 token；
-   GitHub 仓库 → Settings → Secrets and variables → Actions → **Variables** → 新建 `CF_BEACON_TOKEN`。
-   设好后 Cloudflare 那边的「自动设定」可以关掉，避免重复计数。
+1. ~~**Cloudflare Web Analytics 令牌。**~~ ✅ 已完成（2026-10-03）。令牌存在 GitHub 的 Secrets 里，部署流程两边都读；每次部署的「Analytics beacon check」步骤会显示是否读到。
+   还可以顺手做：Cloudflare → Web Analytics → fixme.vip → 管理网站，把「自动设定」关掉，避免重复计数。
 2. **Google Search Console。** 添加「网域」类型资源 `fixme.vip`，用 Cloudflare DNS 加 TXT 记录验证，然后在「站点地图」提交 `https://fixme.vip/sitemap-index.xml`。
 3. **Bing Webmaster Tools。** https://www.bing.com/webmasters ，选择「从 Google Search Console 导入」，一键完成。Bing 的数据也会影响 ChatGPT 搜索和 Copilot 的结果。
 
