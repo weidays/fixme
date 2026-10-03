@@ -139,7 +139,21 @@ jobs:
             if git diff --cached --quiet; then echo "Nothing new for main."; exit 0; fi
             list=$(for f in $publish; do echo "- $(basename "$f" .md)"; done)
             git commit -q -m "Publish AI-reviewed HVAC pages" -m "$list"
-            git push origin main
+            # main can move while this run is generating (a merged PR, a manual
+            # edit). Rebase onto the latest main and retry rather than losing
+            # the batch. The commit only adds new pages plus backlog/rejection
+            # bookkeeping, so the rebase is normally clean.
+            pushed=0
+            for attempt in 1 2 3; do
+              if git push origin HEAD:main; then pushed=1; break; fi
+              echo "Push rejected (attempt $attempt) — rebasing onto the latest main."
+              git fetch -q origin main
+              git rebase -q origin/main || { git rebase --abort; echo "::error::Rebase onto main failed."; break; }
+            done
+            if [ "$pushed" != 1 ]; then
+              echo "::error::Could not publish to main after retries; pages will be regenerated next run."
+              exit 1
+            fi
             echo "published=$(echo $publish | wc -w)" >> "$GITHUB_OUTPUT"
           )
           if [ -n "$publish" ]; then
