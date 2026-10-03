@@ -109,7 +109,7 @@ const fmt = (date: Date) =>
     <div class="applies-to">
       <strong>Typical repair cost:</strong>
       {d.costRange}
-      {!isDiy && <> — <a href={`/quote/?from=${entry.id}`}>compare free local quotes</a></>}
+      {!isDiy && <> — <a href={`/quote/?from=${entry.id}`} rel="nofollow">compare free local quotes</a></>}
     </div>
 
     {/* Severity-driven rail ordering: DIY leads with parts, pro/emergency leads with quotes */}
