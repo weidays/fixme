@@ -18,7 +18,7 @@ on:
     inputs:
       count:
         description: 'How many drafts to generate'
-        default: '15'
+        default: '8'
 
 permissions:
   contents: write
@@ -86,7 +86,7 @@ jobs:
       - name: Generate drafts
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          COUNT: ${{ github.event.inputs.count || '15' }}
+          COUNT: ${{ github.event.inputs.count || '8' }}
           CLAUDE_MODEL: ${{ vars.CLAUDE_MODEL || 'claude-opus-4-8' }}
         run: npx tsx scripts/generate-batch.ts
 
@@ -101,8 +101,8 @@ jobs:
         if: steps.new.outputs.files != ''
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          REVIEW_MODEL: ${{ vars.REVIEW_MODEL || 'claude-opus-5' }}
-          REVISE_MODEL: ${{ vars.REVISE_MODEL || 'claude-opus-5' }}
+          REVIEW_MODEL: ${{ vars.REVIEW_MODEL || 'claude-opus-5-5' }}
+          REVISE_MODEL: ${{ vars.REVISE_MODEL || 'claude-opus-5-5' }}
         run: npx tsx scripts/review-draft.ts --revise --out review-report.json ${{ steps.new.outputs.files }}
 
       - name: Drop drafts that failed review
