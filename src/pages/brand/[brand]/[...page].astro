@@ -5,7 +5,7 @@ import { getCollection } from 'astro:content';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import ErrorCard from '../../../components/ErrorCard.astro';
 import Pagination from '../../../components/Pagination.astro';
-import { BRANDS, BRAND_LABELS, EQUIPMENT_LABELS } from '../../../config';
+import { BRANDS, BRAND_LABELS, EQUIPMENT_LABELS, MIN_INDEXABLE_LISTING } from '../../../config';
 import { hubGroups, hubPath } from '../../../lib/codes';
 
 export const getStaticPaths = (async ({ paginate }) => {
@@ -28,11 +28,16 @@ const { page, hubs } = Astro.props;
 const { brand } = Astro.params;
 const label = BRAND_LABELS[brand as (typeof BRANDS)[number]];
 const pageSuffix = page.currentPage > 1 ? ` (page ${page.currentPage})` : '';
+// Paginated pages need their own title and description, or Search Console
+// reports them as duplicates of page 1.
+const titleSuffix = page.currentPage > 1 ? ` – Page ${page.currentPage}` : '';
+const descPrefix = page.currentPage > 1 ? `Page ${page.currentPage} of ${page.lastPage}. ` : '';
 ---
 
 <BaseLayout
-  title={`${label} Error Codes: Meanings, Causes & Fixes`}
-  description={`Every ${label} HVAC error code we've decoded — what each code means, ranked causes, safe DIY checks, honest repair costs, and when to call a pro.`}
+  title={`${label} Error Codes: Meanings, Causes & Fixes${titleSuffix}`}
+  description={`${descPrefix}Every ${label} HVAC error code we've decoded — what each code means, ranked causes, safe DIY checks, honest repair costs, and when to call a pro.`}
+  noindex={page.total < MIN_INDEXABLE_LISTING}
 >
   <h1>{label} error codes{pageSuffix}</h1>
   <p>

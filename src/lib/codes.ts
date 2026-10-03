@@ -52,9 +52,14 @@ export function hubGroups(all: Entry[]): Map<string, Entry[]> {
 /**
  * Related pages for one error page: the neighbouring codes on the same
  * brand + equipment (wrapping around the sorted list), then the same code on
- * the sister brand that shares its control boards.
+ * the sister brand that shares its control boards, then a few of the same
+ * brand's guides for other equipment.
  */
-export function relatedFor(entry: Entry, all: Entry[], limit = 8): { siblings: Entry[]; sister: Entry | null } {
+export function relatedFor(
+  entry: Entry,
+  all: Entry[],
+  limit = 8,
+): { siblings: Entry[]; sister: Entry | null; otherEquipment: Entry[] } {
   const d = entry.data;
   const same = all.filter((e) => e.data.brand === d.brand && e.data.equipment === d.equipment).sort(codeOrder);
   const i = same.findIndex((e) => e.id === entry.id);
@@ -72,5 +77,11 @@ export function relatedFor(entry: Entry, all: Entry[], limit = 8): { siblings: E
   const sister = sisterBrand
     ? all.find((e) => e.data.brand === sisterBrand && e.data.equipment === d.equipment && e.data.code.toLowerCase() === d.code.toLowerCase()) ?? null
     : null;
-  return { siblings, sister };
+  // A few guides for the same brand's other equipment, so pages in small
+  // families (one AC page, one heat-pump page) aren't left with almost no links.
+  const otherEquipment = all
+    .filter((e) => e.data.brand === d.brand && e.data.equipment !== d.equipment)
+    .sort((a, b) => a.data.equipment.localeCompare(b.data.equipment) || codeOrder(a, b))
+    .slice(0, 4);
+  return { siblings, sister, otherEquipment };
 }

@@ -57,6 +57,12 @@ export const EQUIPMENT_LABELS: Record<(typeof EQUIPMENT)[number], string> = {
 
 export const SEVERITIES = ['diy', 'pro', 'emergency'] as const;
 
+// Brand and equipment listing pages with fewer guides than this are noindexed
+// and left out of the sitemap: a page listing one or two links is what Google
+// files as a soft 404 or "crawled, not indexed". They index on their own once
+// enough guides exist.
+export const MIN_INDEXABLE_LISTING = 3;
+
 export function amazonSearchUrl(query: string): string {
   return `https://www.amazon.com/s?k=${encodeURIComponent(query)}&tag=${AMAZON_TAG}`;
 }
