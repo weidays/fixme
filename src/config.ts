@@ -4,6 +4,9 @@
 export const SITE_NAME = 'fixme.vip';
 export const SITE_TAGLINE = 'HVAC error codes, explained and fixed';
 
+// Public contact address, used on the contact, about, privacy and terms pages.
+export const CONTACT_EMAIL = 'hello@fixme.vip';
+
 // Rail A — Amazon Associates. Replace after approval; links render with this tag.
 export const AMAZON_TAG = 'mindsprint-20'; // TODO: replace with your real Associates tag
 

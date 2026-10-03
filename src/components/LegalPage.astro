@@ -1,0 +1,25 @@
+---
+// Shared shell for the trust pages (privacy, terms, about, contact).
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  heading: string;
+  updated?: string; // ISO date shown as "Last updated"
+  jsonLd?: Record<string, unknown>[];
+}
+
+const { title, description, heading, updated, jsonLd = [] } = Astro.props;
+const fmt = (iso: string) =>
+  new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' });
+---
+
+<BaseLayout title={title} description={description} jsonLd={jsonLd}>
+  <article class="fix legal">
+    <nav class="breadcrumbs" aria-label="Breadcrumb"><a href="/">Home</a> › {heading}</nav>
+    <h1>{heading}</h1>
+    {updated && <p class="meta-line">Last updated {fmt(updated)}</p>}
+    <slot />
+  </article>
+</BaseLayout>

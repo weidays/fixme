@@ -1,0 +1,35 @@
+---
+import LegalPage from '../components/LegalPage.astro';
+import { CONTACT_EMAIL } from '../config';
+---
+
+<LegalPage
+  title="Contact fixme.vip"
+  description="How to reach fixme.vip with corrections, privacy requests and partnership enquiries, and where to go for urgent HVAC help."
+  heading="Contact us"
+>
+  <div class="safety-banner">
+    <strong>Emergency?</strong> If you smell gas or a carbon monoxide alarm is sounding, leave the building now and call
+    your gas utility or 911 from outside. Don't wait for an email reply.
+  </div>
+
+  <p>
+    Email: <a href={`mailto:${CONTACT_EMAIL}`}><strong>{CONTACT_EMAIL}</strong></a>
+  </p>
+  <p>We usually reply within two business days. Please email us about:</p>
+  <ul>
+    <li><strong>Corrections.</strong> Include the page address and what is wrong. Accuracy matters to us.</li>
+    <li>
+      <strong>Privacy requests,</strong> such as asking what we hold about you or asking us to delete it. See our
+      <a href="/privacy/">Privacy Policy</a>.
+    </li>
+    <li><strong>Partnerships and advertising.</strong></li>
+  </ul>
+
+  <h2>Need a repair?</h2>
+  <p>
+    We don't do repairs ourselves, and we can't diagnose your unit by email. To have a licensed local technician
+    contact you, use the <a href="/quote/">free quote form</a>. To look up a code, use the
+    <a href="/fix/">code lookup</a>.
+  </p>
+</LegalPage>
