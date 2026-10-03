@@ -143,11 +143,13 @@
     ]
   },
   "rheem-furnace-blower-won-t-shut-off": {
-    "count": 1,
-    "last": "2026-10-02",
+    "count": 2,
+    "last": "2026-10-03",
     "reasons": [
-      "The frontmatter costRange and meta description cap the repair at \"$350 if the control board or fan relay needs replacement.\" That is unrealistically low for a 2026 US integrated furnace control board ",
-      "\"Fan relay / control board replacement: $250–$600 installed\" — the floor is below any plausible real-world Rheem furnace control board job (board alone commonly runs $150–$400 plus diagnostic and 1–2 "
+      "The limit switch logic is backwards. A high-limit switch is normally closed and opens (trips) on overheat. An open limit makes the IFC run the blower continuously. 'Stuck closed' is the normal operati",
+      "The page omits flame rollout and abnormal-flame conditions. On Rheem IFC boards, an open rollout switch or flame sensed with no call for heat can also drive the blower continuously. These are safety-c",
+      "The control board estimate of $350–$600 installed is unrealistically low for 2026; the plausible range is about $400–$1,200. Because of this, the headline costRange and description cap of '$600' under",
+      "Rheem IFC boards have a diagnostic status LED. A constant blower caused by an open limit, rollout, or flame fault usually comes with a flash code. The page never tells the homeowner to read the LED co"
     ]
   },
   "rheem-furnace-leaking-water": {
