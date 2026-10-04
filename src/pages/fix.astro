@@ -1,8 +1,20 @@
 ---
+import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { BRANDS, BRAND_LABELS } from '../config';
+import { hubGroups, hubLabel, hubPath } from '../lib/codes';
 // The search index is fetched at runtime from /search-index.json (built by
 // src/pages/search-index.json.ts), so this page's HTML stays small regardless
 // of how many thousand articles exist — no inlined index.
+//
+// The code-chart directory below the tool is static HTML: without it the page
+// is an empty form to a crawler, which Search Console files as a soft 404.
+const errors = await getCollection('errors');
+const charts = [...hubGroups(errors).entries()].map(([key, list]) => {
+  const [brand, equipment] = key.split('/');
+  return { href: hubPath(brand, equipment), label: hubLabel(brand, equipment), count: list.length };
+});
+const brands = BRANDS.filter((b) => errors.some((e) => e.data.brand === b));
 ---
 
 <BaseLayout
@@ -45,6 +57,34 @@ import BaseLayout from '../layouts/BaseLayout.astro';
       <a href="/quote/">get free local quotes</a>.
     </p>
   </div>
+
+  <section class="code-directory">
+    <h2>Browse error code charts</h2>
+    <p>
+      Every code we've documented, grouped by brand and equipment. Each chart
+      lists what the code means and how urgent it is.
+    </p>
+    <ul class="related-list">
+      {charts.map((c) => (
+        <li><a href={c.href}>{c.label} error codes</a> ({c.count})</li>
+      ))}
+    </ul>
+    <h2>Browse by brand</h2>
+    <p class="hub-links">
+      {brands.map((b) => <a href={`/brand/${b}/`}>{BRAND_LABELS[b]}</a>)}
+    </p>
+    <h2>How to read a flashing furnace light</h2>
+    <p>
+      Most furnaces report faults through an LED on the control board, visible
+      through a small window in the lower door. Carrier, Bryant and Lennox
+      boards blink a two-digit code (three short flashes, a pause, then one
+      flash is code 31). Goodman, Amana, Trane, American Standard and York
+      boards repeat a single count (three flashes, a long pause, three
+      flashes). Count the pattern twice before you open the door: removing the
+      door cuts power and clears the code on many boards. Some newer units show
+      the code on the thermostat instead.
+    </p>
+  </section>
 </BaseLayout>
 
 <script>

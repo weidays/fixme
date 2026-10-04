@@ -184,6 +184,9 @@ ACCURACY RULES: Only state what is well-documented for this brand. Every listed 
 DIY BOUNDARY (a senior editor rejects pages that cross it): homeowner actions are limited to thermostat settings and batteries, air filter, breaker or switch reset, ONE reset of a locked-out unit, visible vents/registers, condensate line, and seating exterior panels. Anything inside the cabinet is technician work: fuses, door switches, wiring, sensors, igniters, capacitors, multimeter tests, cleaning flame sensors or burners. Put those only in the technician column, and list in "parts" only items a homeowner may buy and install themselves (filters, thermostat batteries, a thermostat) — or leave parts empty. Never instruct bypassing safety switches, opening gas valves, handling refrigerant, or repeated resets of locked-out units. If severity is emergency (e.g. gas smell), the FIRST guidance must be to shut down, ventilate, and call the gas utility's emergency line / 911 — not DIY.`;
 }
 
+// API failures this run, so a run where every call failed (e.g. no credit) fails loudly.
+const apiErrors: string[] = [];
+
 async function generateOne(item: { brand: string; equipment: string; code: string; severity: string }): Promise<string | null> {
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -202,7 +205,9 @@ async function generateOne(item: { brand: string; equipment: string; code: strin
     }),
   });
   if (!res.ok) {
-    console.error(`  API error ${res.status}: ${(await res.text()).slice(0, 200)}`);
+    const body = (await res.text()).slice(0, 300);
+    apiErrors.push(`${res.status}: ${body}`);
+    console.error(`  API error ${res.status}: ${body.slice(0, 200)}`);
     return null;
   }
   const data = (await res.json()) as { content: { type: string; text?: string }[]; stop_reason?: string };
@@ -259,5 +264,15 @@ for (const item of pending) {
 }
 
 console.log(`\nDone. ${written} draft(s) written, ${skipped.length} skipped.`);
+// Every draft failed at the API (no credit, bad key, outage): fail the run so
+// it shows red and GitHub emails the owner, instead of a silent green no-op.
+if (written === 0 && pending.length > 0 && apiErrors.length > 0 && skipped.length === pending.length) {
+  const credit = apiErrors.some((e) => /credit balance is too low/i.test(e));
+  const reason = credit
+    ? 'Anthropic API credit balance is too low. Top up at https://console.anthropic.com/settings/billing (or enable auto-reload), then re-run.'
+    : `Every Anthropic API call failed. First error: ${apiErrors[0].slice(0, 200)}`;
+  console.log(`::error title=No pages generated::${reason}`);
+  process.exit(1);
+}
 if (skipped.length) console.log('Skipped: ' + skipped.join('; '));
 console.log('Next: the build step re-validates against the schema; the PR is the review gate.');

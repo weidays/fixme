@@ -2,7 +2,8 @@
 import { getCollection } from 'astro:content';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ErrorCard from '../components/ErrorCard.astro';
-import { BRANDS, BRAND_LABELS, EQUIPMENT, EQUIPMENT_LABELS } from '../config';
+import { BRANDS, BRAND_LABELS, CONTACT_EMAIL, EQUIPMENT, EQUIPMENT_LABELS } from '../config';
+import { hubGroups, hubLabel, hubPath } from '../lib/codes';
 
 const errors = await getCollection('errors');
 
@@ -18,11 +19,38 @@ const countByEquipment = Object.fromEntries(
 const recent = [...errors]
   .sort((a, b) => b.data.dateModified.valueOf() - a.data.dateModified.valueOf())
   .slice(0, 12);
+
+// Code charts are the site's strongest pages; linking them from the homepage
+// passes it their way and gives crawlers a two-click path to every guide.
+const charts = [...hubGroups(errors).entries()]
+  .map(([key, list]) => {
+    const [brand, equipment] = key.split('/');
+    return { href: hubPath(brand, equipment), label: hubLabel(brand, equipment), count: list.length };
+  })
+  .sort((a, b) => b.count - a.count);
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: 'fixme.vip',
+    url: 'https://fixme.vip/',
+    description: 'HVAC error codes, explained and fixed.',
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'fixme.vip',
+    url: 'https://fixme.vip/',
+    email: CONTACT_EMAIL,
+  },
+];
 ---
 
 <BaseLayout
   title="HVAC Error Codes Explained & Fixed — fixme.vip"
   description="Look up your furnace, AC or heat pump error code. What it means, ranked causes, DIY checks, honest repair costs, and when to call a licensed pro."
+  jsonLd={jsonLd}
 >
   <section class="hero">
     <h1>Your furnace is flashing a code.<br />Here's what it means.</h1>
@@ -40,6 +68,18 @@ const recent = [...errors]
       />
     </form>
   </section>
+
+  <h2 class="section-title">Error code charts</h2>
+  <div class="category-grid">
+    {
+      charts.map((c) => (
+        <a href={c.href}>
+          {c.label} codes
+          <span>{c.count} {c.count === 1 ? 'code' : 'codes'}</span>
+        </a>
+      ))
+    }
+  </div>
 
   <h2 class="section-title">By brand</h2>
   <div class="category-grid">

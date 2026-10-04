@@ -21,7 +21,7 @@ export async function getStaticPaths() {
   }));
 }
 
-const { entry, siblings, sister, hasHub } = Astro.props;
+const { entry, siblings, sister, otherEquipment, hasHub } = Astro.props;
 const { Content } = await render(entry);
 const d = entry.data;
 const pageUrl = new URL(`/error/${entry.id}/`, Astro.site).href;
@@ -38,7 +38,7 @@ const techArticle = {
   datePublished: d.datePublished.toISOString(),
   dateModified: d.dateModified.toISOString(),
   mainEntityOfPage: pageUrl,
-  author: { '@type': 'Organization', name: 'fixme.vip Editorial', url: 'https://fixme.vip' },
+  author: { '@type': 'Organization', name: 'fixme.vip Editorial', url: 'https://fixme.vip/about/' },
   publisher: { '@type': 'Organization', name: 'fixme.vip', url: 'https://fixme.vip' },
   keywords: d.tags.join(', '),
 };
@@ -94,7 +94,7 @@ const fmt = (date: Date) =>
     <span class="badge">{brandLabel} · {equipmentLabel}</span>
     <h1>{d.title}</h1>
     <p class="meta-line">
-      Last updated {fmt(d.dateModified)} · By fixme.vip Editorial{d.reviewedBy && ` · Reviewed by ${d.reviewedBy}`}
+      Last updated {fmt(d.dateModified)} · By <a href="/about/">fixme.vip Editorial</a>{d.reviewedBy && ` · Reviewed by ${d.reviewedBy}`}
     </p>
 
     <div class="error-banner">{brandLabel} {equipmentLabel}: {d.code}</div>
@@ -109,7 +109,7 @@ const fmt = (date: Date) =>
     <div class="applies-to">
       <strong>Typical repair cost:</strong>
       {d.costRange}
-      {!isDiy && <> — <a href={`/quote/?from=${entry.id}`}>compare free local quotes</a></>}
+      {!isDiy && <> — <a href={`/quote/?from=${entry.id}`} rel="nofollow">compare free local quotes</a></>}
     </div>
 
     {/* Severity-driven rail ordering: DIY leads with parts, pro/emergency leads with quotes */}
@@ -133,7 +133,7 @@ const fmt = (date: Date) =>
       <PartsList parts={d.parts} />
     )}
 
-    <RelatedCodes entry={entry} siblings={siblings} sister={sister} hasHub={hasHub} />
+    <RelatedCodes entry={entry} siblings={siblings} sister={sister} otherEquipment={otherEquipment} hasHub={hasHub} />
 
     <section class="faq-block">
       <h2>Frequently asked questions</h2>
