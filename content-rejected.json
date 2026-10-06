@@ -165,5 +165,12 @@
     "reasons": [
       "The page's body correctly states that \"there is no single flash count that applies across all York furnaces\" and that the number assigned to a pressure-switch fault differs by platform and board revis"
     ]
+  },
+  "lennox-heat-pump-frozen-and-not-defrosting": {
+    "count": 1,
+    "last": "2026-10-05",
+    "reasons": [
+      "The cause ranking contradicts itself. The intro says low refrigerant charge and outdoor fan/capacitor failures are 'very common real-world causes of icing, especially on older systems.' Yet the list r"
+    ]
   }
 }
