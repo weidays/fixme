@@ -172,5 +172,12 @@
     "reasons": [
       "The cause ranking contradicts itself. The intro says low refrigerant charge and outdoor fan/capacitor failures are 'very common real-world causes of icing, especially on older systems.' Yet the list r"
     ]
+  },
+  "trane-heat-pump-blowing-cold-air-in-heat-mode": {
+    "count": 1,
+    "last": "2026-10-09",
+    "reasons": [
+      "appliesTo lists 'XR, XL, XV and Precision series.' XR, XL and XV are real Trane heat pump tiers. I cannot verify a Trane residential split heat pump line called 'Precision,' so it appears to be an inv"
+    ]
   }
 }
