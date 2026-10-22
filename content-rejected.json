@@ -179,5 +179,12 @@
     "reasons": [
       "appliesTo lists 'XR, XL, XV and Precision series.' XR, XL and XV are real Trane heat pump tiers. I cannot verify a Trane residential split heat pump line called 'Precision,' so it appears to be an inv"
     ]
+  },
+  "honeywell-thermostat-screen-blank": {
+    "count": 1,
+    "last": "2026-10-22",
+    "reasons": [
+      "The T4 is grouped with the RTH2300 as a 'battery-only' unit, and cause #1 lists it among battery-powered models. As far as I know, the T4/T4 Pro (TH4110U-series) is dual-powered: it can run on 2 AA ba"
+    ]
   }
 }
