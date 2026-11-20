@@ -186,5 +186,13 @@
     "reasons": [
       "The T4 is grouped with the RTH2300 as a 'battery-only' unit, and cause #1 lists it among battery-powered models. As far as I know, the T4/T4 Pro (TH4110U-series) is dual-powered: it can run on 2 AA ba"
     ]
+  },
+  "american-standard-furnace-won-t-ignite": {
+    "count": 1,
+    "last": "2026-11-20",
+    "reasons": [
+      "The page says 'many boards report rollout separately from the limit, often as 6 flashes.' On common Trane/American Standard integrated controls (S8/S9-series and similar), 6 flashes usually means 115 ",
+      "Because the limit and rollout often share one flash code on these boards, the open-limit guidance needs a rollout caveat. Present 4 flashes as 'replace filter and open vents' only after warning that t"
+    ]
   }
 }
